@@ -4,6 +4,8 @@ THE PURPOSE OF THIS DATABASE IS TO MONITOR EVERY PERSONNELS ON EVERY OFFICE ORDE
 
 This is a database system that shows personnels on different departments, my database system can;
 
+TABLES EXISTED AND CREATED REPRESENTS THE OFFICE ORDER
+
 1. Show Table data's - User can see all the tables and data existed in the database
 2. create new table - the new created table had already the same names from the current table
 3. add new personnel - user can choose which table the new personnel be added
