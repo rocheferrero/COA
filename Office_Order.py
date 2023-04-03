@@ -22,21 +22,6 @@ class DatabaseWindow(QWidget):
 
         self.setWindowTitle("COA Office Order")
         self.setWindowIcon(QIcon('logo.png'))
-
-        # Load the image
-        pixmap = QPixmap("logo.png")
-        
-        # Create a brush from the image
-        brush = QBrush(pixmap)
-        
-        # Set the brush as the background of the table
-        self.setStyleSheet(f"background-color: transparent;")
-        self.setStyleSheet(f"border-image: url(background.jpg);")
-        self.horizontalHeader().setStyleSheet("background-color: transparent;")
-        self.verticalHeader().setStyleSheet("background-color: transparent;")
-        self.viewport().setStyleSheet("background-color:transparent;")
-        self.setAutoFillBackground(True)
-        self.setPalette(QPalette(brush))
         
         self.delete_button = QPushButton("Delete Row")
         self.delete_button.clicked.connect(lambda: self.delete_data(self.current_table))
