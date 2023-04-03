@@ -1,0 +1,535 @@
+import sqlite3
+from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QIcon, QFont, QTextDocument, QTextCursor, QColor, QTextTableCellFormat, QBrush
+from PyQt5.QtPrintSupport import QPrintPreviewDialog
+from PyQt5.QtSql import QSqlDatabase, QSqlQuery
+from PyQt5.QtWidgets import QApplication, QWidget, QPushButton, QGridLayout, QTableWidget, QTableWidgetItem, \
+           QSizePolicy, QLabel, QLineEdit, QMessageBox, QComboBox, QInputDialog
+import csv
+import pandas as pd
+
+class DatabaseWindow(QWidget):
+    def __init__(self):
+        super().__init__()
+
+        # Set up the GUI layout
+        layout = QGridLayout()
+
+        # Create database connection
+        db = QSqlDatabase.addDatabase("QSQLITE")
+        db.setDatabaseName("./officeorder_1.db")
+        db.open()
+
+        self.setWindowTitle("COA Office Order")
+        self.setWindowIcon(QIcon('logo.png'))
+
+        self.delete_button = QPushButton("Delete Row")
+        self.delete_button.clicked.connect(lambda: self.delete_data(self.current_table))
+        layout.addWidget(self.delete_button, 9, 5)
+        self.delete_button.setVisible(False)
+
+        # Create a button to print the table
+        self.print_button = QPushButton("Print Table")
+        self.print_button.clicked.connect(self.print_table)
+        layout.addWidget(self.print_button, 0, 6)
+        self.print_button.setVisible(False)
+
+        self.export_button = QPushButton("Export", self)
+        self.export_button.clicked.connect(lambda: self.export_table_to_csv('OfficeOrder.csv'))
+        layout.addWidget(self.export_button, 1, 6)
+        self.export_button.setVisible(False)
+
+        # Create a combo box to select the table
+        self.table_selector = QComboBox()
+        self.table_selector.currentIndexChanged.connect(self.show_table_data)
+        layout.addWidget(self.table_selector, 5, 6, 1, 1)
+        self.table_selector.setVisible(False) 
+
+                # Create a button to add a new table
+        self.add_table_button = QPushButton("Add New Table")
+        self.add_table_button.clicked.connect(self.add_table)
+        layout.addWidget(self.add_table_button, 5, 5, 1, 1)
+        self.add_table_button.setVisible(False)
+
+       # Create a table widget to display the data
+        self.table = QTableWidget()
+
+        self.table.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        self.table.setVisible(False)
+        layout.addWidget(self.table, 7, 0, 1, 7)
+
+
+        # Label and entry for name
+        self.name_label = QLabel("Enter Name:")
+        layout.addWidget(self.name_label, 1, 0)
+        self.name_entry = QLineEdit()
+        self.name_entry.setPlaceholderText("Enter Name")
+        layout.addWidget(self.name_entry, 1, 1)
+        self.name_entry.setFixedWidth(300)
+        self.name_entry.setVisible(False)
+        self.name_label.setVisible(False)
+
+       # Create query to retrieve department names from oo_2022_749 table
+        query = QSqlQuery("SELECT DISTINCT department FROM oo_2022_749", db)
+
+        # Create combo box and add department names as options
+        self.department_label = QLabel("Select Department:")
+        layout.addWidget(self.department_label, 2, 0)
+        self.department_box = QComboBox()
+        self.department_box.insertItem(0, "Select Department")
+        while query.next():
+            department_name = query.value(0)
+            self.department_box.addItem(department_name)
+        layout.addWidget(self.department_box, 2, 1)
+        self.department_box.setFixedWidth(300)
+        self.department_box.setVisible(False)
+        self.department_label.setVisible(False)
+
+        # Create query to retrieve department from oo_2022_749 table
+        query = QSqlQuery("SELECT DISTINCT region FROM oo_2022_749", db)
+
+        # Create combo box and add region as options
+        self.region_label = QLabel("Select Region:")
+        layout.addWidget(self.region_label, 3, 0)
+        self.region_box = QComboBox()
+        self.region_box.insertItem(0, "Select Region")
+        while query.next():
+            region_name = query.value(0)
+            self.region_box.addItem(region_name)
+        layout.addWidget(self.region_box, 3, 1)
+        self.region_box.setFixedWidth(300)
+        self.region_box.setVisible(False)
+        self.region_label.setVisible(False)
+
+        # Label for table turnover
+        self.turnover_label = QLabel("Select Turnover:")
+        layout.addWidget(self.turnover_label, 4, 0)
+        # Option menu for turnover selection
+        turnover = ["Select Turnover","Yes", "No"]
+        self.selected_turnover = QComboBox()
+        self.selected_turnover.addItems(turnover)
+        layout.addWidget(self.selected_turnover, 4, 1)
+        self.selected_turnover.setFixedWidth(300)
+        self.selected_turnover.setVisible(False)
+        self.turnover_label.setVisible(False)
+        
+        # Add an insert button and connect it to the insert method
+        self.insert_button = QPushButton("Insert data")
+        self.insert_button.clicked.connect(lambda: self.insert_data())
+        layout.addWidget(self.insert_button, 5, 0, 1, 2)
+        self.insert_button.setFixedWidth(450)
+        self.insert_button.setVisible(False)
+
+        self.search_box1 = QLineEdit()
+        self.search_box1.setPlaceholderText("Search by name")
+        layout.addWidget(self.search_box1, 9, 1)
+        self.search_box1.setVisible(False)
+
+             # Connect search box signals to search functions
+        self.search_box1.textChanged.connect(lambda text: self.filter_table(self.table, text))
+
+                # Create a QComboBox widget to select the type of sortation
+        self.sort_box = QComboBox()
+        self.sort_box.addItem("Sort by name")
+        self.sort_box.addItem("Sort by department")
+        self.sort_box.addItem("Sort by region")
+        self.sort_box.addItem("Sort by turnover")
+        self.sort_box.currentIndexChanged.connect(self.sort_table)
+        layout.addWidget(self.sort_box, 9, 0)
+        self.sort_box.setVisible(False)
+
+        # Add an update button and connect it to the update method
+        self.update_button = QPushButton("Update")
+        self.update_button.clicked.connect(lambda: self.update_data(self.current_table))
+        layout.addWidget(self.update_button, 9, 6)
+        self.update_button.setVisible(False)
+
+        # Create the login form
+        self.title_label = QLabel("Please Log In")
+        self.username_label = QLabel("Username:")
+        self.username_edit = QLineEdit()
+        self.password_label = QLabel("Password:")
+        self.password_edit = QLineEdit()
+        self.password_edit.setEchoMode(QLineEdit.Password)
+        self.login_button = QPushButton("Login")
+        self.login_button.clicked.connect(self.login)
+        font = QFont()
+        font.setPointSize(10) # Change this to the desired font size
+        self.title_label.setFont(font)
+        self.password_edit.returnPressed.connect(self.login)
+
+          # Add the login form to the layout
+        layout.addWidget(self.title_label, 1, 1, 1, 1)
+        layout.addWidget(self.username_label, 2, 1, 1, 1)
+        layout.addWidget(self.username_edit, 3, 1, 1, 3)
+        layout.addWidget(self.password_label, 4, 1, 1, 1)
+        layout.addWidget(self.password_edit, 5, 1, 1, 3)
+        layout.addWidget(self.login_button, 6, 1)
+
+        # Set the default username and password
+        self.default_username = "admin"
+        self.default_password = "admin"
+
+         # Set the layout for the window
+        self.setLayout(layout)
+
+        # Set up the database connection
+        self.conn = sqlite3.connect('./officeorder_1.db')
+        self.current_table = None
+
+                 # Label for table selection
+        self.table_label = QLabel("Select table:")
+        layout.addWidget(self.table_label, 0, 0)
+
+        # Option menu for table selection
+        self.selected_table = QComboBox()
+        layout.addWidget(self.selected_table, 0, 1)
+        self.selected_table.setFixedWidth(300)
+        self.selected_table.setVisible(False)
+        self.table_label.setVisible(False)
+
+        # Populate the combo box with table names from the database
+        cursor = self.conn.cursor()
+        cursor.execute("SELECT name FROM sqlite_master WHERE type='table'")
+        tables = [row[0] for row in cursor.fetchall()]
+        self.selected_table.addItems(["Select Table"] + tables)
+
+        # Populate the combo box with the table names
+        cursor = self.conn.cursor()
+        cursor.execute("SELECT name FROM sqlite_master WHERE type='table'")
+        tables = cursor.fetchall()
+        for table in tables:
+            self.table_selector.addItem(table[0])
+
+    def export_table_to_csv(self, filename):
+        # Get the selected table name from the combo box
+        table_name = self.table_selector.currentText()
+
+        # Select all data from the selected table
+        cursor = self.conn.cursor()
+        cursor.execute(f'SELECT name, department, region, turnover, province FROM "{table_name}"')
+        data = cursor.fetchall()
+
+        # Open the file for writing
+        with open(filename, 'w', newline='') as csvfile:
+            writer = csv.writer(csvfile, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+
+            # Write the header row
+            writer.writerow(['Name', 'Department', 'Region', 'Turnover', 'Agency Assignments'])
+
+            # Write the data rows
+            for row in data:
+                writer.writerow(row)
+
+        # Display a success message
+        QMessageBox.information(self, "Export", f"The data has been exported to {filename}.")
+
+    def delete_data(self, table):
+        # Get the selected row(s)
+        selected_rows = self.table.selectionModel().selectedRows()
+            
+        # Make sure at least one row is selected
+        if len(selected_rows) == 0:
+            QMessageBox.warning(self, "Warning", "Please select at least one row to delete.")
+            return
+            
+        # Get the IDs of the selected row(s)
+        ids = [self.table.item(row.row(), 0).text() for row in selected_rows]
+        
+        # Ask user for confirmation before deleting
+        confirm = QMessageBox.question(self, "Delete rows", f"Are you sure you want to delete row?", QMessageBox.Yes | QMessageBox.No)
+        if confirm == QMessageBox.No:
+            return
+        
+        # Delete the selected row(s) from the database
+        c = self.conn.cursor()
+        c.execute(f"DELETE FROM {table} WHERE name IN ({','.join('?' for _ in ids)})", ids)
+        self.conn.commit()
+            
+        # Delete the selected row(s) from the QTableWidget object
+        for row in reversed(sorted(selected_rows, key=lambda x: x.row())):
+            self.table.removeRow(row.row())
+        QMessageBox.information(self, "Delete Success", "Row Deleted")
+
+    def print_table(self):
+        # Get the data from the visible rows of the table
+        data = []
+        for row in range(self.table.rowCount()):
+            if not self.table.isRowHidden(row):
+                row_data = []
+                for column in range(self.table.columnCount()):
+                    item = self.table.item(row, column)
+                    if item is not None and item.text() != "None" and item.text():
+                        row_data.append(item.text())
+                    else:
+                        row_data.append("")
+                data.append(row_data) 
+
+        # Create a QTextDocument and set its default font
+        document = QTextDocument()
+        font = QFont("Arial", 9)
+        document.setDefaultFont(font)
+
+        # Create a QTextCursor to insert content into the document
+        cursor = QTextCursor(document)
+
+        # Create a QTextTable and set its properties
+        table = cursor.insertTable(len(data)+3, len(data[0]))  # Add 1 row for the header and 1 row for "Office Order"
+        table_format = table.format()
+        table_format.setHeaderRowCount(2) # Increase the number of header rows to 2
+        table_format.setAlignment(Qt.AlignHCenter)
+
+        # Insert table name into the first row, second column
+        cursor = table.cellAt(0, 1).firstCursorPosition()
+        format = cursor.charFormat()
+        format.setFontWeight(QFont.Bold)
+        format.setForeground(QBrush(QColor("blue")))
+        cursor.setCharFormat(format)
+        cursor.insertText(self.table_selector.currentText())
+
+        # Set the cell padding
+        cell_format = QTextTableCellFormat()
+        cell_format.setPadding(5)
+        for i in range(table.rows()):
+            for j in range(table.columns()):
+                cell = table.cellAt(i, j)
+                cell.setFormat(cell_format)
+
+        # Insert "Office Order" into the first row
+        cursor = table.cellAt(0, 0).firstCursorPosition()
+        format = cursor.charFormat()
+        format.setFontWeight(QFont.Bold)
+        cursor.setCharFormat(format)
+        cursor.insertText("Office Order:")
+        
+        # Insert headers into the second row and set them to bold and center align
+        header_row = ["Name","Department","Region","Turnover","Agency Assignments"]  # Replace with your actual header names
+        for column, cell_data in enumerate(header_row):
+            cursor = table.cellAt(1, column).firstCursorPosition() # Start inserting headers at row 1
+            format = cursor.charFormat()
+            format.setFontWeight(QFont.Bold)
+            cursor.setCharFormat(format)
+            
+            # Align text within the cell to center
+            cell_format = cursor.blockFormat()
+            cell_format.setAlignment(Qt.AlignHCenter)
+            cursor.setBlockFormat(cell_format)
+            
+            cursor.insertText(str(cell_data))
+
+
+                                # Insert data into the table
+        for row, row_data in enumerate(data):
+            for column, cell_data in enumerate(row_data):
+                cursor = table.cellAt(row+2, column).firstCursorPosition() # Start inserting data at row 2
+
+                if column == 3:  # Check if the column is column 3
+                    cell_format = cursor.blockFormat()  # Get the format of the current cell
+                    cell_format.setAlignment(Qt.AlignHCenter)  # Set text alignment to center
+                    cursor.setBlockFormat(cell_format)  # Apply the updated format to the current cell
+            
+
+                if column == 4:  # Check if the column is Province column
+                    provinces = cell_data.split(",")
+                    for i, province in enumerate(provinces):
+                        if province.strip():  # Check if the province value is not empty
+                            cursor.insertText(f"{i+1}. {province.strip()}")
+                            cursor.insertBlock()
+
+                elif cell_data == "yes":  # Replace "yes" with green checkmark icon
+                    check_mark = chr(0x2713)  # Unicode character for checkmark
+                    check_format = cursor.charFormat()  # Get the format of the current character
+                    check_format.setForeground(Qt.green)  # Set color to green
+                    cursor.setCharFormat(check_format)  # Apply the updated format to the current character
+                    cursor.insertText(check_mark)  # Insert the green checkmark
+
+                elif cell_data == "no":  # Replace "no" with red x symbol
+                    x_symbol = chr(0x2717)  # Unicode character for x symbol
+                    x_format = cursor.charFormat()  # Get the format of the current character
+                    x_format.setForeground(Qt.red)  # Set color to red
+                    cursor.setCharFormat(x_format)  # Apply the updated format to the current character
+                    cursor.insertText(x_symbol)  # Insert the red x symbol
+
+                else:
+                    cursor.insertText(str(cell_data))
+
+        preview = QPrintPreviewDialog()
+        preview.paintRequested.connect(lambda printer: document.print_(printer))
+        preview.exec_()
+
+
+
+    # Define a function to sort the table based on the selected item
+    def sort_table(self, index):
+        column_names = ["name", "department", "region", "turnover"]
+        column_name = column_names[index]
+        self.table.sortItems(column_names.index(column_name))
+
+    def get_province(self, department):
+        c = self.conn.cursor()
+        c.execute("SELECT province FROM oo_2022_749 WHERE department = ?", (department,))
+        result = c.fetchone()
+
+        if result:
+            return result[0]
+        else:
+            return None
+
+        # Function for inserting data
+    def insert_data(self):
+        c = self.conn.cursor()
+        table = self.selected_table.currentText()
+        name = self.name_entry.text().strip()
+        department = self.department_box.currentText()
+        region = self.region_box.currentText()
+        turnover = self.selected_turnover.currentText()
+
+        province = self.get_province(department)
+
+        if turnover != "Select Turnover" and name and department != "Select Department" and region != "Select Region" and table != "Select Table":
+            c.execute(f"INSERT INTO {table} (name, department, region, turnover, province) VALUES (?, ?, ?, ?, ?)", (name, department, region, turnover, province))
+            self.conn.commit()
+            self.name_entry.setText("")
+            self.department_box.setCurrentIndex(0)
+            self.region_box.setCurrentIndex(0)
+            self.selected_turnover.setCurrentIndex(0)
+        else:
+            # display an error message or handle the missing data in some other way
+            print("Please fill in all required fields.")
+            QMessageBox.critical(self, "Error", "Please fill in all required fields.")
+
+    def login(self):
+        # Check if the username and password are correct
+        if self.username_edit.text() == self.default_username and self.password_edit.text() == self.default_password:
+            # Enable the update button
+            self.update_button.setVisible(True)
+            self.insert_button.setVisible(True)
+            self.selected_table.setVisible(True)
+            self.name_entry.setVisible(True)
+            self.department_box.setVisible(True)
+            self.region_box.setVisible(True)
+            self.selected_turnover.setVisible(True)
+            self.table_label.setVisible(True)
+            self.name_label.setVisible(True)
+            self.department_box.setVisible(True)
+            self.department_label.setVisible(True)
+            self.region_label.setVisible(True)
+            self.region_box.setVisible(True)
+            self.turnover_label.setVisible(True)
+            self.table.setVisible(True)
+            self.search_box1.setVisible(True)
+            self.sort_box.setVisible(True)
+            self.table_selector.setVisible(True)
+            self.add_table_button.setVisible(True)
+            self.print_button.setVisible(True)
+            self.delete_button.setVisible(True)
+            self.export_button.setVisible(True)
+            self.showMaximized()
+            # Disable the login form
+            self.username_label.setVisible(False)
+            self.username_edit.setVisible(False)
+            self.password_label.setVisible(False)
+            self.password_edit.setVisible(False)
+            self.login_button.setVisible(False)
+            self.title_label.setVisible(False)
+        else:
+            # Display an error message
+            QMessageBox.critical(self, "Error", "Incorrect username or password")
+
+    def show_table_data(self):
+        # Get the selected table name from the combo box
+        table_name = self.table_selector.currentText()
+        
+
+        # Select all data from the selected table
+        cursor = self.conn.cursor()
+        cursor.execute(f'SELECT name, department, region, turnover, province FROM "{table_name}"')
+        data = cursor.fetchall()
+        
+        # Clear the table widget
+        self.table.clear()
+
+        # Set the table headers
+        headers = ["Name", "Department", "Region", "Turnover", "Agency Assignments"]
+        self.table.setColumnCount(len(headers))
+        self.table.setHorizontalHeaderLabels(headers)
+
+        # Set the column widths
+        self.table.setColumnWidth(0, 200)
+        self.table.setColumnWidth(1, 500)
+        self.table.setColumnWidth(2, 100)
+        self.table.setColumnWidth(3, 100)
+        self.table.setColumnWidth(4, 934)
+
+        # Set the number of rows in the table widget to the number of rows in the data
+        self.table.setRowCount(len(data))
+
+        # Populate the table widget with data
+        for row_idx, row_data in enumerate(data):
+            for col_idx, cell_data in enumerate(row_data):
+                if cell_data == "":
+                    cell_data = None
+                self.table.setItem(row_idx, col_idx, QTableWidgetItem(str(cell_data)))
+          # Store the current table name
+        self.current_table = table_name
+
+    def filter_table(self, table, search_text):
+        for row in range(table.rowCount()):
+            row_hidden = True
+            for column in range(table.columnCount()):
+                if search_text.lower() in table.item(row, column).text().lower():
+                    row_hidden = False
+                    break
+            table.setRowHidden(row, row_hidden)
+
+
+    def update_data(self, table_name):
+        # Update the data in the specified table from the table widget
+        cursor = self.conn.cursor()
+        for row in range(self.table.rowCount()):
+            name = self.table.item(row, 0).text()
+            department = self.table.item(row, 1).text()
+            region = self.table.item(row, 2).text()
+            turnover = self.table.item(row, 3).text()
+            province = self.table.item(row, 4).text()
+
+            # Check the name variable for invalid characters
+            if any(char in name for char in ["'", '"']):
+                name = name.replace("'", "''").replace('"', '""')
+
+            cursor.execute(f'UPDATE "{table_name}" SET department=?, region=?, turnover=?, province=? WHERE name="{name}"', (department, region, turnover, province))
+        self.conn.commit()
+        
+        QMessageBox.information(self, "Update Success", "Row Updated")
+
+    def add_table(self):
+        # Prompt the user for the new table name
+        table_name, ok = QInputDialog.getText(self, 'Add New Table', 'Enter the name of the new table:')
+        if ok:
+            # Create a new table with the same columns as oo_2022_749 plus id and name
+            cursor = self.conn.cursor()
+            cursor.execute(f'CREATE TABLE "{table_name}" AS SELECT id, name, * FROM oo_2022_749 WHERE 1=0')
+            
+            # Insert the id and name values into the new table
+            cursor.execute(f'INSERT INTO "{table_name}" (id, name) SELECT id, name FROM oo_2022_749')
+            self.conn.commit()
+
+            # Add the new table name to the combo box
+            self.table_selector.addItem(table_name)
+            self.selected_table.addItem(table_name)
+
+
+
+
+
+if __name__ == '__main__':
+    # Create the application and window
+    app = QApplication([])
+
+    app.setWindowIcon(QIcon('logo.png'))
+
+    window = DatabaseWindow()
+    window.show()
+
+    # Start the event loop
+    app.exec_()
