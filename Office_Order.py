@@ -42,7 +42,7 @@ class DatabaseWindow(QWidget):
         self.export_button = QPushButton(self)
         self.export_button.setIcon(qtawesome.icon('fa.save'))
         self.export_button.clicked.connect(lambda: self.export_table_to_csv('OfficeOrder.csv'))
-        layout.addWidget(self.export_button, 2, 6, alignment=Qt.AlignRight)
+        layout.addWidget(self.export_button, 1, 6, alignment=Qt.AlignLeft)
         self.export_button.setFixedWidth(50)
         self.export_button.setVisible(False)
 
