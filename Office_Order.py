@@ -1,10 +1,11 @@
 import sqlite3
 from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QIcon, QFont, QTextDocument, QTextCursor, QColor, QTextTableCellFormat, QBrush, QPixmap, QPalette
+from PyQt5.QtGui import QIcon, QFont, QTextDocument, QTextCursor, QColor, QTextTableCellFormat, QBrush
 from PyQt5.QtPrintSupport import QPrintPreviewDialog
 from PyQt5.QtSql import QSqlDatabase, QSqlQuery
 from PyQt5.QtWidgets import QApplication, QWidget, QPushButton, QGridLayout, QTableWidget, QTableWidgetItem, \
            QSizePolicy, QLabel, QLineEdit, QMessageBox, QComboBox, QInputDialog
+import qtawesome
 import csv
 import pandas as pd
 
@@ -25,30 +26,39 @@ class DatabaseWindow(QWidget):
         
         self.delete_button = QPushButton("Delete Row")
         self.delete_button.clicked.connect(lambda: self.delete_data(self.current_table))
-        layout.addWidget(self.delete_button, 9, 5)
+        layout.addWidget(self.delete_button, 10, 5)
         self.delete_button.setVisible(False)
 
-        # Create a button to print the table
-        self.print_button = QPushButton("Print Table")
+        # Create an icon for the printer button
+        icon = QIcon("printer.png")
+
+                # Create a button to print the table
+        self.print_button = QPushButton()
+        self.print_button.setIcon(icon)
         self.print_button.clicked.connect(self.print_table)
-        layout.addWidget(self.print_button, 0, 6)
+        layout.addWidget(self.print_button, 1, 6, alignment=Qt.AlignRight)
+        self.print_button.setFixedWidth(50)
         self.print_button.setVisible(False)
 
-        self.export_button = QPushButton("Export", self)
+        # Create the export button with an icon
+        self.export_button = QPushButton(self)
+        self.export_button.setIcon(qtawesome.icon('fa.save'))
         self.export_button.clicked.connect(lambda: self.export_table_to_csv('OfficeOrder.csv'))
-        layout.addWidget(self.export_button, 1, 6)
+        layout.addWidget(self.export_button, 2, 6, alignment=Qt.AlignRight)
+        self.export_button.setFixedWidth(50)
         self.export_button.setVisible(False)
+
 
         # Create a combo box to select the table
         self.table_selector = QComboBox()
         self.table_selector.currentIndexChanged.connect(self.show_table_data)
-        layout.addWidget(self.table_selector, 5, 6, 1, 1)
+        layout.addWidget(self.table_selector, 6, 6, 1, 1)
         self.table_selector.setVisible(False) 
 
                 # Create a button to add a new table
         self.add_table_button = QPushButton("Add New Table")
         self.add_table_button.clicked.connect(self.add_table)
-        layout.addWidget(self.add_table_button, 5, 5, 1, 1)
+        layout.addWidget(self.add_table_button, 6, 5, 1, 1)
         self.add_table_button.setVisible(False)
 
        # Create a table widget to display the data
@@ -56,15 +66,15 @@ class DatabaseWindow(QWidget):
 
         self.table.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.table.setVisible(False)
-        layout.addWidget(self.table, 7, 0, 1, 7)
+        layout.addWidget(self.table, 8, 0, 1, 7)
 
 
         # Label and entry for name
         self.name_label = QLabel("Enter Name:")
-        layout.addWidget(self.name_label, 1, 0)
+        layout.addWidget(self.name_label, 2, 0)
         self.name_entry = QLineEdit()
         self.name_entry.setPlaceholderText("Enter Name")
-        layout.addWidget(self.name_entry, 1, 1)
+        layout.addWidget(self.name_entry, 2, 1)
         self.name_entry.setFixedWidth(300)
         self.name_entry.setVisible(False)
         self.name_label.setVisible(False)
@@ -74,13 +84,13 @@ class DatabaseWindow(QWidget):
 
         # Create combo box and add department names as options
         self.department_label = QLabel("Select Department:")
-        layout.addWidget(self.department_label, 2, 0)
+        layout.addWidget(self.department_label, 3, 0)
         self.department_box = QComboBox()
         self.department_box.insertItem(0, "Select Department")
         while query.next():
             department_name = query.value(0)
             self.department_box.addItem(department_name)
-        layout.addWidget(self.department_box, 2, 1)
+        layout.addWidget(self.department_box, 3, 1)
         self.department_box.setFixedWidth(300)
         self.department_box.setVisible(False)
         self.department_label.setVisible(False)
@@ -90,25 +100,25 @@ class DatabaseWindow(QWidget):
 
         # Create combo box and add region as options
         self.region_label = QLabel("Select Region:")
-        layout.addWidget(self.region_label, 3, 0)
+        layout.addWidget(self.region_label, 4, 0)
         self.region_box = QComboBox()
         self.region_box.insertItem(0, "Select Region")
         while query.next():
             region_name = query.value(0)
             self.region_box.addItem(region_name)
-        layout.addWidget(self.region_box, 3, 1)
+        layout.addWidget(self.region_box, 4, 1)
         self.region_box.setFixedWidth(300)
         self.region_box.setVisible(False)
         self.region_label.setVisible(False)
 
         # Label for table turnover
         self.turnover_label = QLabel("Select Turnover:")
-        layout.addWidget(self.turnover_label, 4, 0)
+        layout.addWidget(self.turnover_label, 5, 0)
         # Option menu for turnover selection
         turnover = ["Select Turnover","Yes", "No"]
         self.selected_turnover = QComboBox()
         self.selected_turnover.addItems(turnover)
-        layout.addWidget(self.selected_turnover, 4, 1)
+        layout.addWidget(self.selected_turnover, 5, 1)
         self.selected_turnover.setFixedWidth(300)
         self.selected_turnover.setVisible(False)
         self.turnover_label.setVisible(False)
@@ -116,13 +126,13 @@ class DatabaseWindow(QWidget):
         # Add an insert button and connect it to the insert method
         self.insert_button = QPushButton("Insert data")
         self.insert_button.clicked.connect(lambda: self.insert_data())
-        layout.addWidget(self.insert_button, 5, 0, 1, 2)
+        layout.addWidget(self.insert_button, 6, 0, 1, 2)
         self.insert_button.setFixedWidth(450)
         self.insert_button.setVisible(False)
 
         self.search_box1 = QLineEdit()
         self.search_box1.setPlaceholderText("Search by name")
-        layout.addWidget(self.search_box1, 9, 1)
+        layout.addWidget(self.search_box1, 10, 1)
         self.search_box1.setVisible(False)
 
              # Connect search box signals to search functions
@@ -135,13 +145,13 @@ class DatabaseWindow(QWidget):
         self.sort_box.addItem("Sort by region")
         self.sort_box.addItem("Sort by turnover")
         self.sort_box.currentIndexChanged.connect(self.sort_table)
-        layout.addWidget(self.sort_box, 9, 0)
+        layout.addWidget(self.sort_box, 10, 0)
         self.sort_box.setVisible(False)
 
         # Add an update button and connect it to the update method
         self.update_button = QPushButton("Update")
         self.update_button.clicked.connect(lambda: self.update_data(self.current_table))
-        layout.addWidget(self.update_button, 9, 6)
+        layout.addWidget(self.update_button, 10, 6)
         self.update_button.setVisible(False)
 
         # Create the login form
@@ -179,11 +189,11 @@ class DatabaseWindow(QWidget):
 
                  # Label for table selection
         self.table_label = QLabel("Select table:")
-        layout.addWidget(self.table_label, 0, 0)
+        layout.addWidget(self.table_label, 1, 0)
 
         # Option menu for table selection
         self.selected_table = QComboBox()
-        layout.addWidget(self.selected_table, 0, 1)
+        layout.addWidget(self.selected_table, 1, 1)
         self.selected_table.setFixedWidth(300)
         self.selected_table.setVisible(False)
         self.table_label.setVisible(False)
