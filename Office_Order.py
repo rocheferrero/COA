@@ -506,7 +506,7 @@ class DatabaseWindow(QWidget):
 
         # Update the row count label
         row_count = self.table.rowCount()
-        self.row_count_label.setText(f"Personnel Total: {row_count}")
+        self.row_count_label.setText(f"Personnels Total: {row_count}")
 
     def filter_table(self, table, search_text):
         total_row = table.rowCount() - 1
@@ -522,7 +522,7 @@ class DatabaseWindow(QWidget):
             if not row_hidden:
                 num_visible_rows += 1
 
-        self.row_count_label.setText("Total Rows: {}".format(num_visible_rows))
+        self.row_count_label.setText("Personnels Total: {}".format(num_visible_rows))
 
     def update_data(self, table_name):
         # Update the data in the specified table from the table widget
