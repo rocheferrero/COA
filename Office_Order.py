@@ -29,12 +29,10 @@ class DatabaseWindow(QWidget):
         layout.addWidget(self.delete_button, 10, 5)
         self.delete_button.setVisible(False)
 
-        # Create an icon for the printer button
-        icon = QIcon("printer.png")
 
                 # Create a button to print the table
         self.print_button = QPushButton()
-        self.print_button.setIcon(icon)
+        self.print_button.setIcon(qtawesome.icon('fa.print'))
         self.print_button.clicked.connect(self.print_table)
         layout.addWidget(self.print_button, 1, 6, alignment=Qt.AlignRight)
         self.print_button.setFixedWidth(50)
@@ -55,10 +53,14 @@ class DatabaseWindow(QWidget):
         layout.addWidget(self.table_selector, 6, 6, 1, 1)
         self.table_selector.setVisible(False) 
 
+        icon = QIcon("table.png")
+
                 # Create a button to add a new table
-        self.add_table_button = QPushButton("Add New Table")
+        self.add_table_button = QPushButton(self)
+        self.add_table_button.setIcon(icon)                                 
         self.add_table_button.clicked.connect(self.add_table)
-        layout.addWidget(self.add_table_button, 6, 5, 1, 1)
+        layout.addWidget(self.add_table_button, 6, 5, 1, 1, alignment=Qt.AlignRight)
+        self.add_table_button.setFixedWidth(50)
         self.add_table_button.setVisible(False)
 
        # Create a table widget to display the data
