@@ -63,10 +63,9 @@ class DatabaseWindow(QWidget):
         self.add_table_button.setFixedWidth(50)
         self.add_table_button.setVisible(False)
 
-        # create a QLabel to display the row count
+        # Total Rows Counts
         self.row_count_label = QLabel(self)
         layout.addWidget(self.row_count_label, 6, 5, alignment=Qt.AlignCenter)
-        self.row_count_label.setVisible(False)
 
         # Create a table widget to display the data
         self.table = QTableWidget()
@@ -508,14 +507,20 @@ class DatabaseWindow(QWidget):
         self.row_count_label.setText(f"Total rows: {row_count}")
 
     def filter_table(self, table, search_text):
+        total_row = table.rowCount() - 1
+        num_visible_rows = 0
         for row in range(table.rowCount()):
             row_hidden = True
             for column in range(table.columnCount()):
-                if search_text.lower() in table.item(row, column).text().lower():
+                item = table.item(row, column)
+                if item and search_text.lower() in item.text().lower():
                     row_hidden = False
                     break
             table.setRowHidden(row, row_hidden)
+            if not row_hidden:
+                num_visible_rows += 1
 
+        self.row_count_label.setText("Total Rows: {}".format(num_visible_rows))
 
     def update_data(self, table_name):
         # Update the data in the specified table from the table widget
