@@ -8,7 +8,7 @@ TABLES EXISTED AND CREATED REPRESENTS THE OFFICE ORDER
 
 1. Show Table data's - User can see all the tables and data existed in the database
 2. create new table - the new created table had already the same names from the current table
-3. add new personnel - user can choose which table the new personnel be added
+3. add new data - user can choose which table the new personnel be added
 4. manipulate data - user can manipulate every data on each row and user need to click update button to save all the changes they made
 5. delete row - user can delete specific row at once
 6. filter table - there is a search bar below where user can filter table and show specific person,department,region,turnover and agency assignment
