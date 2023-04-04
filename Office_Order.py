@@ -66,6 +66,7 @@ class DatabaseWindow(QWidget):
         # Total Rows Counts
         self.row_count_label = QLabel(self)
         layout.addWidget(self.row_count_label, 6, 5, alignment=Qt.AlignCenter)
+        self.row_count_label.setVisible(False)
 
         # Create a table widget to display the data
         self.table = QTableWidget()
@@ -440,6 +441,7 @@ class DatabaseWindow(QWidget):
             self.print_button.setVisible(True)
             self.delete_button.setVisible(True)
             self.export_button.setVisible(True)
+            self.row_count_label.setVisible(True)
             self.row_count_label.setVisible(True)
             self.showMaximized()
             # Disable the login form
