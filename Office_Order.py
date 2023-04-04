@@ -133,7 +133,7 @@ class DatabaseWindow(QWidget):
         self.insert_button.setVisible(False)
 
         self.search_box1 = QLineEdit()
-        self.search_box1.setPlaceholderText("Search by name")
+        self.search_box1.setPlaceholderText("Search")
         layout.addWidget(self.search_box1, 10, 1)
         self.search_box1.setVisible(False)
 
