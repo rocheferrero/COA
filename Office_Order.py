@@ -29,7 +29,6 @@ class DatabaseWindow(QWidget):
         layout.addWidget(self.delete_button, 10, 5)
         self.delete_button.setVisible(False)
 
-
                 # Create a button to print the table
         self.print_button = QPushButton()
         self.print_button.setIcon(qtawesome.icon('fa.print'))
@@ -42,7 +41,7 @@ class DatabaseWindow(QWidget):
         self.export_button = QPushButton(self)
         self.export_button.setIcon(qtawesome.icon('fa.save'))
         self.export_button.clicked.connect(lambda: self.export_table_to_csv('OfficeOrder.csv'))
-        layout.addWidget(self.export_button, 1, 6, alignment=Qt.AlignLeft)
+        layout.addWidget(self.export_button, 1, 6, alignment=Qt.AlignCenter)
         self.export_button.setFixedWidth(50)
         self.export_button.setVisible(False)
 
@@ -50,20 +49,26 @@ class DatabaseWindow(QWidget):
         # Create a combo box to select the table
         self.table_selector = QComboBox()
         self.table_selector.currentIndexChanged.connect(self.show_table_data)
-        layout.addWidget(self.table_selector, 6, 6, 1, 1)
+        layout.addWidget(self.table_selector, 6, 6)
+        self.table_selector.setFixedWidth(200)
         self.table_selector.setVisible(False) 
 
         icon = QIcon("table.png")
 
-                # Create a button to add a new table
+        # Create a button to add a new table
         self.add_table_button = QPushButton(self)
         self.add_table_button.setIcon(icon)                                 
         self.add_table_button.clicked.connect(self.add_table)
-        layout.addWidget(self.add_table_button, 6, 5, 1, 1, alignment=Qt.AlignRight)
+        layout.addWidget(self.add_table_button, 6, 5, alignment=Qt.AlignRight)
         self.add_table_button.setFixedWidth(50)
         self.add_table_button.setVisible(False)
 
-       # Create a table widget to display the data
+        # create a QLabel to display the row count
+        self.row_count_label = QLabel(self)
+        layout.addWidget(self.row_count_label, 6, 5, alignment=Qt.AlignCenter)
+        self.row_count_label.setVisible(False)
+
+        # Create a table widget to display the data
         self.table = QTableWidget()
 
         self.table.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
@@ -81,7 +86,7 @@ class DatabaseWindow(QWidget):
         self.name_entry.setVisible(False)
         self.name_label.setVisible(False)
 
-       # Create query to retrieve department names from oo_2022_749 table
+        # Create query to retrieve department names from oo_2022_749 table
         query = QSqlQuery("SELECT DISTINCT department FROM oo_2022_749", db)
 
         # Create combo box and add department names as options
@@ -134,7 +139,7 @@ class DatabaseWindow(QWidget):
 
         self.search_box1 = QLineEdit()
         self.search_box1.setPlaceholderText("Search")
-        layout.addWidget(self.search_box1, 10, 1)
+        layout.addWidget(self.search_box1, 10, 1, 1, 4)
         self.search_box1.setVisible(False)
 
              # Connect search box signals to search functions
@@ -192,7 +197,7 @@ class DatabaseWindow(QWidget):
                  # Label for table selection
         self.table_label = QLabel("Select table:")
         layout.addWidget(self.table_label, 1, 0)
-
+        self.table_label.setFixedWidth(100)
         # Option menu for table selection
         self.selected_table = QComboBox()
         layout.addWidget(self.selected_table, 1, 1)
@@ -436,6 +441,7 @@ class DatabaseWindow(QWidget):
             self.print_button.setVisible(True)
             self.delete_button.setVisible(True)
             self.export_button.setVisible(True)
+            self.row_count_label.setVisible(True)
             self.showMaximized()
             # Disable the login form
             self.username_label.setVisible(False)
@@ -484,6 +490,22 @@ class DatabaseWindow(QWidget):
                 self.table.setItem(row_idx, col_idx, QTableWidgetItem(str(cell_data)))
           # Store the current table name
         self.current_table = table_name
+
+        # Get the data from the database and populate the table
+        query = f"SELECT name, department, region, turnover, province FROM {table_name}"
+        data = pd.read_sql_query(query, self.conn)
+        self.table.setRowCount(len(data))
+        self.table.setColumnCount(len(data.columns))
+        self.table.setHorizontalHeaderLabels(data.columns)
+
+        for i in range(len(data)):
+            for j in range(len(data.columns)):
+                item = QTableWidgetItem(str(data.iloc[i, j]))
+                self.table.setItem(i, j, item)
+
+        # Update the row count label
+        row_count = self.table.rowCount()
+        self.row_count_label.setText(f"Total rows: {row_count}")
 
     def filter_table(self, table, search_text):
         for row in range(table.rowCount()):
