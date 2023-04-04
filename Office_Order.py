@@ -26,7 +26,7 @@ class DatabaseWindow(QWidget):
         
         self.delete_button = QPushButton("Delete Row")
         self.delete_button.clicked.connect(lambda: self.delete_data(self.current_table))
-        layout.addWidget(self.delete_button, 10, 5)
+        layout.addWidget(self.delete_button, 11, 5)
         self.delete_button.setVisible(False)
 
                 # Create a button to print the table
@@ -65,7 +65,7 @@ class DatabaseWindow(QWidget):
 
         # Total Rows Counts
         self.row_count_label = QLabel(self)
-        layout.addWidget(self.row_count_label, 6, 5, alignment=Qt.AlignCenter)
+        layout.addWidget(self.row_count_label, 10, 0, alignment=Qt.AlignLeft)
         self.row_count_label.setVisible(False)
 
         # Create a table widget to display the data
@@ -138,8 +138,8 @@ class DatabaseWindow(QWidget):
         self.insert_button.setVisible(False)
 
         self.search_box1 = QLineEdit()
-        self.search_box1.setPlaceholderText("Search")
-        layout.addWidget(self.search_box1, 10, 1, 1, 4)
+        self.search_box1.setPlaceholderText("Search in the Table")
+        layout.addWidget(self.search_box1, 11, 1, 1, 4)
         self.search_box1.setVisible(False)
 
              # Connect search box signals to search functions
@@ -152,13 +152,13 @@ class DatabaseWindow(QWidget):
         self.sort_box.addItem("Sort by region")
         self.sort_box.addItem("Sort by turnover")
         self.sort_box.currentIndexChanged.connect(self.sort_table)
-        layout.addWidget(self.sort_box, 10, 0)
+        layout.addWidget(self.sort_box, 11, 0)
         self.sort_box.setVisible(False)
 
         # Add an update button and connect it to the update method
         self.update_button = QPushButton("Update")
         self.update_button.clicked.connect(lambda: self.update_data(self.current_table))
-        layout.addWidget(self.update_button, 10, 6)
+        layout.addWidget(self.update_button, 11, 6)
         self.update_button.setVisible(False)
 
         # Create the login form
@@ -506,7 +506,7 @@ class DatabaseWindow(QWidget):
 
         # Update the row count label
         row_count = self.table.rowCount()
-        self.row_count_label.setText(f"Total rows: {row_count}")
+        self.row_count_label.setText(f"Personnel Total: {row_count}")
 
     def filter_table(self, table, search_text):
         total_row = table.rowCount() - 1
