@@ -64,9 +64,15 @@ class DatabaseWindow(QWidget):
         self.add_table_button.setVisible(False)
 
         # Total Rows Counts
-        self.row_count_label = QLabel(self)
-        layout.addWidget(self.row_count_label, 10, 0, alignment=Qt.AlignLeft)
-        self.row_count_label.setVisible(False)
+        self.row_count_label1 = QLabel(self)
+        layout.addWidget(self.row_count_label1, 10, 0, alignment=Qt.AlignLeft)
+        self.row_count_label1.setVisible(False)
+        self.row_count_label2 = QLabel(self)
+        layout.addWidget(self.row_count_label2, 10, 3, alignment=Qt.AlignLeft)
+        self.row_count_label2.setVisible(False)
+        self.row_count_label3 = QLabel(self)
+        layout.addWidget(self.row_count_label3, 10, 3, alignment=Qt.AlignCenter)
+        self.row_count_label3.setVisible(False)
 
         # Create a table widget to display the data
         self.table = QTableWidget()
@@ -441,8 +447,12 @@ class DatabaseWindow(QWidget):
             self.print_button.setVisible(True)
             self.delete_button.setVisible(True)
             self.export_button.setVisible(True)
-            self.row_count_label.setVisible(True)
-            self.row_count_label.setVisible(True)
+            self.row_count_label1.setVisible(True)
+            self.row_count_label1.setVisible(True)
+            self.row_count_label2.setVisible(True)
+            self.row_count_label2.setVisible(True)
+            self.row_count_label3.setVisible(True)
+            self.row_count_label3.setVisible(True)
             self.showMaximized()
             # Disable the login form
             self.username_label.setVisible(False)
@@ -458,13 +468,12 @@ class DatabaseWindow(QWidget):
     def show_table_data(self):
         # Get the selected table name from the combo box
         table_name = self.table_selector.currentText()
-        
 
         # Select all data from the selected table
         cursor = self.conn.cursor()
         cursor.execute(f'SELECT name, department, region, turnover, province FROM "{table_name}"')
         data = cursor.fetchall()
-        
+
         # Clear the table widget
         self.table.clear()
 
@@ -489,7 +498,8 @@ class DatabaseWindow(QWidget):
                 if cell_data == "":
                     cell_data = None
                 self.table.setItem(row_idx, col_idx, QTableWidgetItem(str(cell_data)))
-          # Store the current table name
+
+        # Store the current table name
         self.current_table = table_name
 
         # Get the data from the database and populate the table
@@ -499,14 +509,23 @@ class DatabaseWindow(QWidget):
         self.table.setColumnCount(len(data.columns))
         self.table.setHorizontalHeaderLabels(data.columns)
 
+        yes_count = 0
+        none_count = 0
+
         for i in range(len(data)):
             for j in range(len(data.columns)):
                 item = QTableWidgetItem(str(data.iloc[i, j]))
                 self.table.setItem(i, j, item)
+                if j == 3 and item.text() == "yes":
+                    yes_count += 1
+                elif j == 3 and item.text() == "None":
+                    none_count += 1
 
         # Update the row count label
         row_count = self.table.rowCount()
-        self.row_count_label.setText(f"Personnels Total: {row_count}")
+        self.row_count_label1.setText(f"Personnels Total: {row_count}")
+        self.row_count_label2.setText(f"Yes: {yes_count}")
+        self.row_count_label3.setText(f"None: {none_count}")
 
     def filter_table(self, table, search_text):
         total_row = table.rowCount() - 1
@@ -521,8 +540,21 @@ class DatabaseWindow(QWidget):
             table.setRowHidden(row, row_hidden)
             if not row_hidden:
                 num_visible_rows += 1
+                
+        yes_count = 0
+        none_count = 0
+        for row in range(table.rowCount()):
+            if not table.isRowHidden(row):
+                item = table.item(row, 3)
+                if item and item.text().lower() == "yes":
+                    yes_count += 1
+                elif not item or item.text().lower() == "None":
+                    none_count += 1
+        
+        self.row_count_label1.setText(f"Personnels Total: {num_visible_rows}")
+        self.row_count_label2.setText(f"Yes: {yes_count}")
+        self.row_count_label3.setText(f"None: {none_count}")
 
-        self.row_count_label.setText("Personnels Total: {}".format(num_visible_rows))
 
     def update_data(self, table_name):
         # Update the data in the specified table from the table widget
