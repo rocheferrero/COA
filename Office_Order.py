@@ -548,7 +548,7 @@ class DatabaseWindow(QWidget):
                 item = table.item(row, 3)
                 if item and item.text().lower() == "yes":
                     yes_count += 1
-                elif not item or item.text().lower() == "None":
+                elif not item or item.text().lower() == "None" or "none" or "no":
                     none_count += 1
         
         self.row_count_label1.setText(f"Personnels Total: {num_visible_rows}")
