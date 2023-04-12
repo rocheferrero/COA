@@ -71,7 +71,7 @@ class DatabaseWindow(QWidget):
         layout.addWidget(self.row_count_label2, 10, 3, alignment=Qt.AlignLeft)
         self.row_count_label2.setVisible(False)
         self.row_count_label3 = QLabel(self)
-        layout.addWidget(self.row_count_label3, 10, 3, alignment=Qt.AlignCenter)
+        layout.addWidget(self.row_count_label3, 10, 3, alignment=Qt.AlignRight)
         self.row_count_label3.setVisible(False)
 
         # Create a table widget to display the data
@@ -524,7 +524,7 @@ class DatabaseWindow(QWidget):
         # Update the row count label
         row_count = self.table.rowCount()
         self.row_count_label1.setText(f"Personnels Total: {row_count}")
-        self.row_count_label2.setText(f"Yes: {yes_count}")
+        self.row_count_label2.setText(f"Turned Over/Yes: {yes_count}")
         self.row_count_label3.setText(f"None: {none_count}")
 
     def filter_table(self, table, search_text):
@@ -552,7 +552,7 @@ class DatabaseWindow(QWidget):
                     none_count += 1
         
         self.row_count_label1.setText(f"Personnels Total: {num_visible_rows}")
-        self.row_count_label2.setText(f"Yes: {yes_count}")
+        self.row_count_label2.setText(f"Turned Over/Yes: {yes_count}")
         self.row_count_label3.setText(f"None: {none_count}")
 
 
