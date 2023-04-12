@@ -128,7 +128,7 @@ class DatabaseWindow(QWidget):
         self.turnover_label = QLabel("Select Turnover:")
         layout.addWidget(self.turnover_label, 5, 0)
         # Option menu for turnover selection
-        turnover = ["Select Turnover","Yes", "No"]
+        turnover = ["Select Turnover","yes", "no"]
         self.selected_turnover = QComboBox()
         self.selected_turnover.addItems(turnover)
         layout.addWidget(self.selected_turnover, 5, 1)
@@ -546,7 +546,7 @@ class DatabaseWindow(QWidget):
         for row in range(table.rowCount()):
             if not table.isRowHidden(row):
                 item = table.item(row, 3)
-                if item and item.text().lower() == "yes":
+                if item and item.text().lower() == "yes" or "Yes":
                     yes_count += 1
                 elif not item or item.text().lower() == "None" or "none" or "no":
                     none_count += 1
