@@ -1,6 +1,6 @@
 # COA
 
-THE PURPOSE OF THIS DATABASE IS TO MONITOR EVERY PERSONNELS ON EVERY OFFICE ORDER 
+THE PURPOSE OF THIS DATABASE SYSTEM IS TO MONITOR EVERY PERSONNELS ON EVERY OFFICE ORDER 
 
 This is a database system that shows personnels on different departments, my database system can;
 
