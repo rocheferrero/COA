@@ -1,18 +1,20 @@
 import sqlite3
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, QTimer
 from PyQt5.QtGui import QIcon, QFont, QTextDocument, QTextCursor, QColor, QTextTableCellFormat, QBrush
 from PyQt5.QtPrintSupport import QPrintPreviewDialog
 from PyQt5.QtSql import QSqlDatabase, QSqlQuery
 from PyQt5.QtWidgets import QApplication, QWidget, QPushButton, QGridLayout, QTableWidget, QTableWidgetItem, \
-           QSizePolicy, QLabel, QLineEdit, QMessageBox, QComboBox, QInputDialog
+           QSizePolicy, QLabel, QLineEdit, QMessageBox, QComboBox, QInputDialog, QFrame, QVBoxLayout
 import qtawesome
 import csv
 import pandas as pd
+
 
 class DatabaseWindow(QWidget):
     def __init__(self):
         super().__init__()
 
+        self.showFullScreen()
         # Set up the GUI layout
         layout = QGridLayout()
 
@@ -32,18 +34,28 @@ class DatabaseWindow(QWidget):
                 # Create a button to print the table
         self.print_button = QPushButton()
         self.print_button.setIcon(qtawesome.icon('fa.print'))
+        self.print_button.setText("Print Table")  # add text to the button                   
         self.print_button.clicked.connect(self.print_table)
-        layout.addWidget(self.print_button, 1, 6, alignment=Qt.AlignRight)
-        self.print_button.setFixedWidth(50)
+        layout.addWidget(self.print_button, 5, 6, alignment=Qt.AlignRight)
+        self.print_button.setFixedWidth(100)
         self.print_button.setVisible(False)
 
         # Create the export button with an icon
         self.export_button = QPushButton(self)
         self.export_button.setIcon(qtawesome.icon('fa.save'))
+        self.export_button.setText("Export Table")  # add text to the button                   
         self.export_button.clicked.connect(lambda: self.export_table_to_csv('OfficeOrder.csv'))
-        layout.addWidget(self.export_button, 1, 6, alignment=Qt.AlignCenter)
-        self.export_button.setFixedWidth(50)
+        layout.addWidget(self.export_button, 5, 6, alignment=Qt.AlignLeft)
+        self.export_button.setFixedWidth(100)
         self.export_button.setVisible(False)
+
+         # Create the logout button with an icon
+        self.logout_button = QPushButton(self)
+        self.logout_button.setText("Log Out")  # add text to the button                   
+        self.logout_button.clicked.connect(self.log_out)
+        layout.addWidget(self.logout_button, 1, 6, alignment=Qt.AlignRight)
+        self.logout_button.setFixedWidth(100)
+        self.logout_button.setVisible(False)
 
 
         # Create a combo box to select the table
@@ -57,11 +69,13 @@ class DatabaseWindow(QWidget):
 
         # Create a button to add a new table
         self.add_table_button = QPushButton(self)
-        self.add_table_button.setIcon(icon)                                 
+        self.add_table_button.setIcon(icon)   
+        self.add_table_button.setText("Add Table")  # add text to the button                           
         self.add_table_button.clicked.connect(self.add_table)
         layout.addWidget(self.add_table_button, 6, 5, alignment=Qt.AlignRight)
-        self.add_table_button.setFixedWidth(50)
+        self.add_table_button.setFixedWidth(100)
         self.add_table_button.setVisible(False)
+
 
         # Total Rows Counts
         self.row_count_label1 = QLabel(self)
@@ -167,27 +181,51 @@ class DatabaseWindow(QWidget):
         layout.addWidget(self.update_button, 11, 6)
         self.update_button.setVisible(False)
 
-        # Create the login form
-        self.title_label = QLabel("Please Log In")
-        self.username_label = QLabel("Username:")
-        self.username_edit = QLineEdit()
-        self.password_label = QLabel("Password:")
-        self.password_edit = QLineEdit()
+                # Create a new container widget for the login form
+        self.login_container = QFrame(self)
+        self.login_container.setFrameStyle(QFrame.Panel | QFrame.Raised)
+        self.login_container.setStyleSheet("background-color: white")
+        self.login_container.setFixedWidth(300)
+        self.login_container.setFixedHeight(200)
+        self.login_container_layout = QVBoxLayout(self.login_container)
+        self.login_container_layout.setContentsMargins(20, 20, 20, 20)
+
+        # Add the login form widgets to the container widget
+        
+        self.title_label = QLabel(self.login_container)
+        self.title_label.setText("Please Login")
+        self.title_label.setAlignment(Qt.AlignCenter)  # set alignment to center
+        self.login_container_layout.addWidget(self.title_label)
+
+        self.username_label = QLabel(self.login_container)
+        self.username_label.setText("Username:")
+        self.login_container_layout.addWidget(self.username_label)
+
+        self.username_edit = QLineEdit(self.login_container)
+        self.login_container_layout.addWidget(self.username_edit)
+
+        self.password_label = QLabel(self.login_container)
+        self.password_label.setText("Password:")
+        self.login_container_layout.addWidget(self.password_label)
+
+        self.password_edit = QLineEdit(self.login_container)
         self.password_edit.setEchoMode(QLineEdit.Password)
-        self.login_button = QPushButton("Login")
+        self.login_container_layout.addWidget(self.password_edit)
+
+        self.login_button = QPushButton(self.login_container)
+        self.login_button.setText("Log In")
         self.login_button.clicked.connect(self.login)
-        font = QFont()
-        font.setPointSize(10) # Change this to the desired font size
-        self.title_label.setFont(font)
+        self.login_container_layout.addWidget(self.login_button)
+        self.login_container_layout.addWidget(self.login_button)
+
+        # Connect the returnPressed signal of the password_edit field to the login method
         self.password_edit.returnPressed.connect(self.login)
 
-          # Add the login form to the layout
-        layout.addWidget(self.title_label, 1, 1, 1, 1)
-        layout.addWidget(self.username_label, 2, 1, 1, 1)
-        layout.addWidget(self.username_edit, 3, 1, 1, 3)
-        layout.addWidget(self.password_label, 4, 1, 1, 1)
-        layout.addWidget(self.password_edit, 5, 1, 1, 3)
-        layout.addWidget(self.login_button, 6, 1)
+        # Center the login container in the main widget
+        layout.addWidget(self.login_container, 0, 0, 3, 7, alignment=Qt.AlignCenter)
+
+        # Hide the login form initially
+        self.login_container.setVisible(True)
 
         # Set the default username and password
         self.default_username = "admin"
@@ -453,17 +491,67 @@ class DatabaseWindow(QWidget):
             self.row_count_label2.setVisible(True)
             self.row_count_label3.setVisible(True)
             self.row_count_label3.setVisible(True)
-            self.showMaximized()
+            self.logout_button.setVisible(True)
+            self.showFullScreen()
+
             # Disable the login form
+            self.title_label.setVisible(False)
             self.username_label.setVisible(False)
             self.username_edit.setVisible(False)
             self.password_label.setVisible(False)
             self.password_edit.setVisible(False)
             self.login_button.setVisible(False)
-            self.title_label.setVisible(False)
+            self.login_container.setVisible(False)
+
         else:
             # Display an error message
             QMessageBox.critical(self, "Error", "Incorrect username or password")
+
+    def log_out(self):
+            
+            # Disable all
+            self.update_button.setVisible(False)
+            self.insert_button.setVisible(False)
+            self.selected_table.setVisible(False)
+            self.name_entry.setVisible(False)
+            self.department_box.setVisible(False)
+            self.region_box.setVisible(False)
+            self.selected_turnover.setVisible(False)
+            self.table_label.setVisible(False)
+            self.name_label.setVisible(False)
+            self.department_box.setVisible(False)
+            self.department_label.setVisible(False)
+            self.region_label.setVisible(False)
+            self.region_box.setVisible(False)
+            self.turnover_label.setVisible(False)
+            self.table.setVisible(False)
+            self.search_box1.setVisible(False)
+            self.sort_box.setVisible(False)
+            self.table_selector.setVisible(False)
+            self.add_table_button.setVisible(False)
+            self.print_button.setVisible(False)
+            self.delete_button.setVisible(False)
+            self.export_button.setVisible(False)
+            self.row_count_label1.setVisible(False)
+            self.row_count_label1.setVisible(False)
+            self.row_count_label2.setVisible(False)
+            self.row_count_label2.setVisible(False)
+            self.row_count_label3.setVisible(False)
+            self.row_count_label3.setVisible(False)
+            self.logout_button.setVisible(False)
+
+            # Enable the login form.
+            self.title_label.setVisible(True)
+            self.username_label.setVisible(True)
+            self.username_edit.clear() 
+            self.username_edit.setVisible(True)
+            self.password_label.setVisible(True)
+            self.password_edit.clear() 
+            self.password_edit.setVisible(True)
+            self.login_button.setVisible(True)
+            self.login_container.setVisible(True)
+            self.showNormal()
+
 
     def show_table_data(self):
         # Get the selected table name from the combo box
