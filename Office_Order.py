@@ -101,28 +101,36 @@ class DatabaseWindow(QWidget):
         self.current_table = None
 
         # Create a group box
-        group_box = QGroupBox()
+        self.group_box = QGroupBox()
 
         # Set the border width and color
-        group_box.setStyleSheet("background-color: white; border: 1px solid black;")
+        self.group_box.setStyleSheet("background-color: white; border: 1px solid black;")
 
         # Create a layout for the group box
-        group_box_layout = QGridLayout()
-        group_box_layout.setSpacing(10) # reduce spacing between widgets
+        self.group_box_layout = QGridLayout()
+        self.group_box_layout.setSpacing(10) # reduce spacing between widgets
 
+        # Label for table selection
+        self.insert_label = QLabel("INSERT NEW PERSONNEL")
+        self.insert_label.setAlignment(Qt.AlignCenter)
+        self.group_box_layout.addWidget(self.insert_label, 0, 0, 1, 2, alignment=Qt.AlignHCenter)
+        self.insert_label.setFixedWidth(200)
+        font = QFont()
+        font.setPointSize(10) # set the font size to 16
+        self.insert_label.setFont(font)
+        self.insert_label.setStyleSheet("border: none;")
 
-            # Label for table selection
+        # Label for table selection
         self.table_label = QLabel("Select table:")
-        group_box_layout.addWidget(self.table_label, 1, 0)
+        self.group_box_layout.addWidget(self.table_label, 1, 0)
         self.table_label.setFixedWidth(100)
         self.table_label.setStyleSheet("border: none;")
 
 
         # Option menu for table selection
         self.selected_table = QComboBox()
-        group_box_layout.addWidget(self.selected_table, 1, 1)
+        self.group_box_layout.addWidget(self.selected_table, 1, 1)
         self.selected_table.setFixedWidth(300)
-        self.selected_table.setStyleSheet("QComboBox { text-align: right; }") # Use style sheet to center-align the text
         self.selected_table.setVisible(False)
         self.table_label.setVisible(False)
 
@@ -142,11 +150,11 @@ class DatabaseWindow(QWidget):
 
         # Label and entry for name
         self.name_label = QLabel("Enter Name:")
-        group_box_layout.addWidget(self.name_label, 2, 0)
+        self.group_box_layout.addWidget(self.name_label, 2, 0)
         self.name_label.setStyleSheet("border: none;")
         self.name_entry = QLineEdit()
         self.name_entry.setPlaceholderText("Enter Name")
-        group_box_layout.addWidget(self.name_entry, 2, 1)
+        self.group_box_layout.addWidget(self.name_entry, 2, 1)
         self.name_entry.setFixedWidth(300)
         self.name_entry.setVisible(False)
         self.name_label.setVisible(False)
@@ -156,14 +164,14 @@ class DatabaseWindow(QWidget):
 
         # Create combo box and add department names as options
         self.department_label = QLabel("Select Department:")
-        group_box_layout.addWidget(self.department_label, 3, 0)
+        self.group_box_layout.addWidget(self.department_label, 3, 0)
         self.department_label.setStyleSheet("border: none;")
         self.department_box = QComboBox()
         self.department_box.insertItem(0, "Select Department")
         while query.next():
             department_name = query.value(0)
             self.department_box.addItem(department_name)
-        group_box_layout.addWidget(self.department_box, 3, 1)
+        self.group_box_layout.addWidget(self.department_box, 3, 1)
         self.department_box.setFixedWidth(300)
         self.department_box.setVisible(False)
         self.department_label.setVisible(False)
@@ -173,27 +181,27 @@ class DatabaseWindow(QWidget):
 
         # Create combo box and add region as options
         self.region_label = QLabel("Select Region:")
-        group_box_layout.addWidget(self.region_label, 4, 0)
+        self.group_box_layout.addWidget(self.region_label, 4, 0)
         self.region_label.setStyleSheet("border: none;")
         self.region_box = QComboBox()
         self.region_box.insertItem(0, "Select Region")
         while query.next():
             region_name = query.value(0)
             self.region_box.addItem(region_name)
-        group_box_layout.addWidget(self.region_box, 4, 1)
+        self.group_box_layout.addWidget(self.region_box, 4, 1)
         self.region_box.setFixedWidth(300)
         self.region_box.setVisible(False)
         self.region_label.setVisible(False)
 
         # Label for table turnover
         self.turnover_label = QLabel("Select Turnover:")
-        group_box_layout.addWidget(self.turnover_label, 5, 0)
+        self.group_box_layout.addWidget(self.turnover_label, 5, 0)
         self.turnover_label.setStyleSheet("border: none;")
         # Option menu for turnover selection
         turnover = ["Select Turnover","yes", "no"]
         self.selected_turnover = QComboBox()
         self.selected_turnover.addItems(turnover)
-        group_box_layout.addWidget(self.selected_turnover, 5, 1)
+        self.group_box_layout.addWidget(self.selected_turnover, 5, 1)
         self.selected_turnover.setFixedWidth(300)
         self.selected_turnover.setVisible(False)
         self.turnover_label.setVisible(False)
@@ -201,16 +209,19 @@ class DatabaseWindow(QWidget):
         # Add an insert button and connect it to the insert method
         self.insert_button = QPushButton("Insert data")
         self.insert_button.clicked.connect(lambda: self.insert_data())
-        group_box_layout.addWidget(self.insert_button, 6, 0, 1, 2)
+        self.group_box_layout.addWidget(self.insert_button, 6, 0, 1, 2)
         self.insert_button.setFixedWidth(450)
+        self.insert_button.setStyleSheet("""QPushButton:hover {background-color: lightgray;}""")
         self.insert_button.setVisible(False)
 
                 # Set the layout for the group box
-        group_box.setLayout(group_box_layout)
+        self.group_box.setLayout(self.group_box_layout)
 
         # Add the group box to the main layout
-        layout.addWidget(group_box, 1, 0, 6, 2)
-
+        layout.addWidget(self.group_box, 1, 0, 6, 2)
+        
+        self.group_box.setVisible(False)
+                           
         self.search_box1 = QLineEdit()
         self.search_box1.setPlaceholderText("Search in the Table")
         layout.addWidget(self.search_box1, 11, 1, 1, 4)
@@ -279,7 +290,7 @@ class DatabaseWindow(QWidget):
         self.password_edit.returnPressed.connect(self.login)
 
         # Center the login container in the main widget
-        layout.addWidget(self.login_container, 0, 0, 3, 7, alignment=Qt.AlignCenter)
+        layout.addWidget(self.login_container, 2, 0, 3, 7, alignment=Qt.AlignCenter)
 
         # Hide the login form initially
         self.login_container.setVisible(True)
@@ -287,6 +298,7 @@ class DatabaseWindow(QWidget):
         # Set the default username and password
         self.default_username = "admin"
         self.default_password = "admin"
+        
 
         # Set the layout for the window
         self.setLayout(layout)
@@ -521,6 +533,7 @@ class DatabaseWindow(QWidget):
             self.row_count_label3.setVisible(True)
             self.row_count_label3.setVisible(True)
             self.logout_button.setVisible(True)
+            self.group_box.setVisible(True)
             self.showMaximized()
 
 
@@ -569,6 +582,7 @@ class DatabaseWindow(QWidget):
             self.row_count_label3.setVisible(False)
             self.row_count_label3.setVisible(False)
             self.logout_button.setVisible(False)
+            self.group_box.setVisible(False)
 
             # Enable the login form.
             self.title_label.setVisible(True)
@@ -664,7 +678,7 @@ class DatabaseWindow(QWidget):
         for row in range(table.rowCount()):
             if not table.isRowHidden(row):
                 item = table.item(row, 3)
-                if item and item.text().lower() == "yes" or "Yes":
+                if item and item.text().lower() == "yes":
                     yes_count += 1
                 elif not item or item.text().lower() == "None" or "none" or "no":
                     none_count += 1
