@@ -14,7 +14,7 @@ class DatabaseWindow(QWidget):
     def __init__(self):
         super().__init__()
 
-        self.showFullScreen()
+        self.showNormal()
         # Set up the GUI layout
         layout = QGridLayout()
 
@@ -492,7 +492,8 @@ class DatabaseWindow(QWidget):
             self.row_count_label3.setVisible(True)
             self.row_count_label3.setVisible(True)
             self.logout_button.setVisible(True)
-            self.showFullScreen()
+            self.showMaximized()
+
 
             # Disable the login form
             self.title_label.setVisible(False)
