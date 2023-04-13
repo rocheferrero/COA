@@ -492,7 +492,7 @@ class DatabaseWindow(QWidget):
             self.row_count_label3.setVisible(True)
             self.row_count_label3.setVisible(True)
             self.logout_button.setVisible(True)
-            self.showMaximized()
+            self.showFullScreen()
 
 
             # Disable the login form
