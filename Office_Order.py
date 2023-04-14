@@ -93,6 +93,8 @@ class DatabaseWindow(QWidget):
         self.table = QTableWidget()
 
         self.table.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        self.table.setStyleSheet("QTableWidget { border: 1px solid black; }")
+
         self.table.setVisible(False)
         layout.addWidget(self.table, 8, 0, 1, 7)
 
@@ -225,6 +227,7 @@ class DatabaseWindow(QWidget):
         self.search_box1 = QLineEdit()
         self.search_box1.setPlaceholderText("Search in the Table")
         layout.addWidget(self.search_box1, 11, 1, 1, 4)
+        self.search_box1.setStyleSheet("QLineEdit { border: 1px solid black; }")
         self.search_box1.setVisible(False)
 
              # Connect search box signals to search functions
@@ -283,7 +286,6 @@ class DatabaseWindow(QWidget):
         self.login_button = QPushButton(self.login_container)
         self.login_button.setText("Log In")
         self.login_button.clicked.connect(self.login)
-        self.login_container_layout.addWidget(self.login_button)
         self.login_container_layout.addWidget(self.login_button)
 
         # Connect the returnPressed signal of the password_edit field to the login method
@@ -438,14 +440,14 @@ class DatabaseWindow(QWidget):
                             cursor.insertText(f"{i+1}. {province.strip()}")
                             cursor.insertBlock()
 
-                elif cell_data == "yes":  # Replace "yes" with green checkmark icon
+                elif cell_data == "yes" or cell_data == "Yes":  # Replace "yes" with green checkmark icon
                     check_mark = chr(0x2713)  # Unicode character for checkmark
                     check_format = cursor.charFormat()  # Get the format of the current character
                     check_format.setForeground(Qt.green)  # Set color to green
                     cursor.setCharFormat(check_format)  # Apply the updated format to the current character
                     cursor.insertText(check_mark)  # Insert the green checkmark
 
-                elif cell_data == "no":  # Replace "no" with red x symbol
+                elif cell_data == "no" or cell_data == "No":  # Replace "no" with red x symbol
                     x_symbol = chr(0x2717)  # Unicode character for x symbol
                     x_format = cursor.charFormat()  # Get the format of the current character
                     x_format.setForeground(Qt.red)  # Set color to red
