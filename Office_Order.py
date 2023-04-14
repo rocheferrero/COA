@@ -641,7 +641,6 @@ class DatabaseWindow(QWidget):
         data = pd.read_sql_query(query, self.conn)
         self.table.setRowCount(len(data))
         self.table.setColumnCount(len(data.columns))
-        self.table.setHorizontalHeaderLabels(data.columns)
 
         yes_count = 0
         none_count = 0
