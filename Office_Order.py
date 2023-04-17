@@ -4,7 +4,8 @@ from PyQt5.QtGui import QIcon, QFont, QTextDocument, QTextCursor, QColor, QTextT
 from PyQt5.QtPrintSupport import QPrintPreviewDialog
 from PyQt5.QtSql import QSqlDatabase, QSqlQuery
 from PyQt5.QtWidgets import QApplication, QWidget, QPushButton, QGridLayout, QTableWidget, QTableWidgetItem, \
-           QSizePolicy, QLabel, QLineEdit, QMessageBox, QComboBox, QInputDialog, QFrame, QVBoxLayout, QGroupBox
+           QSizePolicy, QLabel, QLineEdit, QMessageBox, QComboBox, QInputDialog, QFrame, QVBoxLayout, QGroupBox, \
+           QHeaderView
 import qtawesome
 import csv
 import pandas as pd
@@ -611,10 +612,15 @@ class DatabaseWindow(QWidget):
         # Clear the table widget
         self.table.clear()
 
-        # Set the table headers
+        # Set the table headers with bold font
         headers = ["Name", "Department", "Region", "Turnover", "Agency Assignments"]
+        header_font = QFont()
+        header_font.setBold(True)
         self.table.setColumnCount(len(headers))
         self.table.setHorizontalHeaderLabels(headers)
+        self.table.horizontalHeader().setFont(header_font)
+        self.table.horizontalHeader().setSectionsClickable(QHeaderView.Interactive)
+        self.table.horizontalHeader().setSectionResizeMode(QHeaderView.Fixed)
 
         # Add a border to the header
         self.table.horizontalHeader().setStyleSheet("""QHeaderView::section {
