@@ -702,7 +702,7 @@ class DatabaseWindow(QWidget):
                 item = table.item(row, 3)
                 if item and item.text().lower() == "yes":
                     yes_count += 1
-                elif not item or item.text().lower() == "None" or "none" or "no":
+                elif not item or item.text().lower() in ["none", "no"]:
                     none_count += 1
         
         self.row_count_label1.setText(f"Personnels Total: {num_visible_rows}")
@@ -731,12 +731,18 @@ class DatabaseWindow(QWidget):
 
     def add_table(self):
         # Prompt the user for the new table name
-        table_name, ok = QInputDialog.getText(self, 'Add New Table', 'Enter the name of the new table:')
+        table_name, ok = QInputDialog.getText(self, 'Add New Table', 'Enter the name of the new table (must start with "oo_"):')
+        
+        # Check if the table name starts with "oo_"
+        if ok and not table_name.startswith("oo_"):
+            QMessageBox.warning(self, 'Invalid Table Name', 'Table name must start with "oo_".')
+            return
+        
         if ok:
             # Create a new table with the same columns as oo_2022_749 plus id and name
             cursor = self.conn.cursor()
             cursor.execute(f'CREATE TABLE "{table_name}" AS SELECT id, name, * FROM oo_2022_749 WHERE 1=0')
-            
+
             # Insert the id and name values into the new table
             cursor.execute(f'INSERT INTO "{table_name}" (id, name) SELECT id, name FROM oo_2022_749')
             self.conn.commit()
@@ -744,8 +750,6 @@ class DatabaseWindow(QWidget):
             # Add the new table name to the combo box
             self.table_selector.addItem(table_name)
             self.selected_table.addItem(table_name)
-
-
 
 
 
