@@ -616,6 +616,14 @@ class DatabaseWindow(QWidget):
         self.table.setColumnCount(len(headers))
         self.table.setHorizontalHeaderLabels(headers)
 
+        # Add a border to the header
+        self.table.horizontalHeader().setStyleSheet("""QHeaderView::section {
+                border-left: 1px solid black;
+                border-right: 1px solid black;
+                border-bottom: 1px solid black;
+                background-color: white;
+            }""")
+
         # Set the column widths
         self.table.setColumnWidth(0, 200)
         self.table.setColumnWidth(1, 500)
@@ -646,13 +654,20 @@ class DatabaseWindow(QWidget):
         none_count = 0
 
         for i in range(len(data)):
+            has_none = False
             for j in range(len(data.columns)):
                 item = QTableWidgetItem(str(data.iloc[i, j]))
                 self.table.setItem(i, j, item)
-                if j == 3 and item.text() == "yes":
+                if j == 3 and item.text().lower() == "none":
+                    has_none = True
+                elif j == 3 and item.text().lower() == "yes":
                     yes_count += 1
-                elif j == 3 and item.text() == "None":
-                    none_count += 1
+            if has_none:
+                # Highlight the row with light red color
+                for k in range(self.table.columnCount()):
+                    self.table.item(i, k).setBackground(QColor(255, 200, 200))
+                none_count += 1
+
 
         # Update the row count label
         row_count = self.table.rowCount()
