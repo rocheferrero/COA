@@ -212,7 +212,7 @@ class DatabaseWindow(QWidget):
         self.insert_button = QPushButton("Insert data")
         self.insert_button.clicked.connect(lambda: self.insert_data())
         self.group_box_layout.addWidget(self.insert_button, 6, 0, 1, 2)
-        self.insert_button.setFixedWidth(450)
+        self.insert_button.setFixedWidth(475)
         self.insert_button.setStyleSheet("""QPushButton:hover {background-color: lightgray;}""")
         self.insert_button.setVisible(False)
 
@@ -658,7 +658,7 @@ class DatabaseWindow(QWidget):
             for j in range(len(data.columns)):
                 item = QTableWidgetItem(str(data.iloc[i, j]))
                 self.table.setItem(i, j, item)
-                if j == 3 and item.text().lower() == "none":
+                if j == 3 and item.text().lower() in ["none", "no"]:
                     has_none = True
                 elif j == 3 and item.text().lower() == "yes":
                     yes_count += 1
