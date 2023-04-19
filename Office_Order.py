@@ -1,5 +1,5 @@
 import sqlite3
-from PyQt5.QtCore import Qt, QTimer
+from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QIcon, QFont, QTextDocument, QTextCursor, QColor, QTextTableCellFormat, QBrush
 from PyQt5.QtPrintSupport import QPrintPreviewDialog
 from PyQt5.QtSql import QSqlDatabase, QSqlQuery
@@ -78,16 +78,24 @@ class DatabaseWindow(QWidget):
         self.add_table_button.setFixedWidth(100)
         self.add_table_button.setVisible(False)
 
+        # Create a Refresh button
+        self.refresh_button = QPushButton(self)
+        self.refresh_button.setIcon(qtawesome.icon('fa.refresh'))
+        self.refresh_button.setText("Refresh")  # add text to the button                           
+        self.refresh_button.clicked.connect(self.refresh_table)
+        layout.addWidget(self.refresh_button, 10, 6, alignment=Qt.AlignRight)
+        self.refresh_button.setFixedWidth(200)
+        self.refresh_button.setVisible(False)
 
         # Total Rows Counts
         self.row_count_label1 = QLabel(self)
         layout.addWidget(self.row_count_label1, 10, 0, alignment=Qt.AlignLeft)
         self.row_count_label1.setVisible(False)
         self.row_count_label2 = QLabel(self)
-        layout.addWidget(self.row_count_label2, 10, 3, alignment=Qt.AlignLeft)
+        layout.addWidget(self.row_count_label2, 10, 2, alignment=Qt.AlignCenter)
         self.row_count_label2.setVisible(False)
         self.row_count_label3 = QLabel(self)
-        layout.addWidget(self.row_count_label3, 10, 3, alignment=Qt.AlignRight)
+        layout.addWidget(self.row_count_label3, 10, 3, alignment=Qt.AlignLeft)
         self.row_count_label3.setVisible(False)
 
         # Create a table widget to display the data
@@ -125,8 +133,8 @@ class DatabaseWindow(QWidget):
 
         # Label for table selection
         self.table_label = QLabel("Select table:")
-        self.group_box_layout.addWidget(self.table_label, 1, 0)
-        self.table_label.setFixedWidth(100)
+        self.group_box_layout.addWidget(self.table_label, 1, 0,)
+        self.table_label.setFixedWidth(150)
         self.table_label.setStyleSheet("border: none;")
 
 
@@ -212,7 +220,7 @@ class DatabaseWindow(QWidget):
         # Add an insert button and connect it to the insert method
         self.insert_button = QPushButton("Insert data")
         self.insert_button.clicked.connect(lambda: self.insert_data())
-        self.group_box_layout.addWidget(self.insert_button, 6, 0, 1, 2)
+        self.group_box_layout.addWidget(self.insert_button, 6, 0, 1, 2,alignment=Qt.AlignHCenter)
         self.insert_button.setFixedWidth(475)
         self.insert_button.setStyleSheet("""QPushButton:hover {background-color: lightgray;}""")
         self.insert_button.setVisible(False)
@@ -222,6 +230,7 @@ class DatabaseWindow(QWidget):
 
         # Add the group box to the main layout
         layout.addWidget(self.group_box, 1, 0, 6, 2)
+        self.group_box.setFixedWidth(600)
         
         self.group_box.setVisible(False)
                            
@@ -305,6 +314,10 @@ class DatabaseWindow(QWidget):
 
         # Set the layout for the window
         self.setLayout(layout)
+
+    def refresh_table(self):
+        # Refresh the table by calling the show_table_data method
+        self.show_table_data()
 
     def export_table_to_csv(self, filename):
         # Get the selected table name from the combo box
@@ -498,10 +511,11 @@ class DatabaseWindow(QWidget):
             self.department_box.setCurrentIndex(0)
             self.region_box.setCurrentIndex(0)
             self.selected_turnover.setCurrentIndex(0)
+            QMessageBox.information(self, "Success", "New data inserted successfully")
         else:
             # display an error message or handle the missing data in some other way
             print("Please fill in all required fields.")
-            QMessageBox.critical(self, "Error", "Please fill in all required fields.")
+            QMessageBox.warning(self, "Missing fields", "Please fill in all required fields.")
 
     def login(self):
         # Check if the username and password are correct
@@ -537,6 +551,7 @@ class DatabaseWindow(QWidget):
             self.row_count_label3.setVisible(True)
             self.logout_button.setVisible(True)
             self.group_box.setVisible(True)
+            self.refresh_button.setVisible(True)
             self.showMaximized()
 
 
@@ -554,7 +569,16 @@ class DatabaseWindow(QWidget):
             QMessageBox.critical(self, "Error", "Incorrect username or password")
 
     def log_out(self):
-            
+        # Display a confirmation message before logging out
+        msg_box = QMessageBox()
+        msg_box.setIcon(QMessageBox.Question)
+        msg_box.setText("Are you sure you want to log out?")
+        msg_box.setWindowTitle("Log out")
+        msg_box.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
+        msg_box.setDefaultButton(QMessageBox.No)
+        button_clicked = msg_box.exec()
+
+        if button_clicked == QMessageBox.Yes:
             # Disable all
             self.update_button.setVisible(False)
             self.insert_button.setVisible(False)
@@ -586,6 +610,7 @@ class DatabaseWindow(QWidget):
             self.row_count_label3.setVisible(False)
             self.logout_button.setVisible(False)
             self.group_box.setVisible(False)
+            self.refresh_button.setVisible(False)
 
             # Enable the login form.
             self.title_label.setVisible(True)
@@ -631,11 +656,11 @@ class DatabaseWindow(QWidget):
             }""")
 
         # Set the column widths
-        self.table.setColumnWidth(0, 200)
-        self.table.setColumnWidth(1, 500)
+        self.table.setColumnWidth(0, 234)
+        self.table.setColumnWidth(1, 400)
         self.table.setColumnWidth(2, 100)
         self.table.setColumnWidth(3, 100)
-        self.table.setColumnWidth(4, 934)
+        self.table.setColumnWidth(4, 1000)
 
         # Set the number of rows in the table widget to the number of rows in the data
         self.table.setRowCount(len(data))
@@ -643,9 +668,11 @@ class DatabaseWindow(QWidget):
         # Populate the table widget with data
         for row_idx, row_data in enumerate(data):
             for col_idx, cell_data in enumerate(row_data):
-                if cell_data == "":
-                    cell_data = None
+                if cell_data == "None":
+                    cell_data = ""
                 self.table.setItem(row_idx, col_idx, QTableWidgetItem(str(cell_data)))
+
+
 
         # Store the current table name
         self.current_table = table_name
@@ -661,10 +688,11 @@ class DatabaseWindow(QWidget):
 
         for i in range(len(data)):
             has_none = False
+            
             for j in range(len(data.columns)):
                 item = QTableWidgetItem(str(data.iloc[i, j]))
                 self.table.setItem(i, j, item)
-                if j == 3 and item.text().lower() in ["none", "no"]:
+                if j == 3 and item.text().lower() in ["none", "no",""]:
                     has_none = True
                 elif j == 3 and item.text().lower() == "yes":
                     yes_count += 1
@@ -677,12 +705,12 @@ class DatabaseWindow(QWidget):
 
         # Update the row count label
         row_count = self.table.rowCount()
-        self.row_count_label1.setText(f"Personnels Total: {row_count}")
-        self.row_count_label2.setText(f"Turned Over/Yes: {yes_count}")
-        self.row_count_label3.setText(f"None: {none_count}")
+        self.row_count_label1.setText(f"Personnels Total: <b>{row_count}</b>")
+        self.row_count_label2.setText(f"Turned Over/Yes: <b>{yes_count}</b>")
+        self.row_count_label3.setText(f"None: <b>{none_count}</b>")
 
     def filter_table(self, table, search_text):
-        total_row = table.rowCount() - 1
+
         num_visible_rows = 0
         for row in range(table.rowCount()):
             row_hidden = True
@@ -705,9 +733,9 @@ class DatabaseWindow(QWidget):
                 elif not item or item.text().lower() in ["none", "no"]:
                     none_count += 1
         
-        self.row_count_label1.setText(f"Personnels Total: {num_visible_rows}")
-        self.row_count_label2.setText(f"Turned Over/Yes: {yes_count}")
-        self.row_count_label3.setText(f"None: {none_count}")
+        self.row_count_label1.setText(f"Personnels Total: <b>{num_visible_rows}</b>")
+        self.row_count_label2.setText(f"Turned Over/Yes: <b>{yes_count}</b>")
+        self.row_count_label3.setText(f"None: <b>{none_count}</b>")
 
 
     def update_data(self, table_name):
@@ -732,17 +760,14 @@ class DatabaseWindow(QWidget):
     def add_table(self):
         # Prompt the user for the new table name
         table_name, ok = QInputDialog.getText(self, 'Add New Table', 'Enter the name of the new table (must start with "oo_"):')
-        
-        # Check if the table name starts with "oo_"
-        if ok and not table_name.startswith("oo_"):
-            QMessageBox.warning(self, 'Invalid Table Name', 'Table name must start with "oo_".')
-            return
-        
         if ok:
+            if not table_name.startswith("oo_"):
+                QMessageBox.critical(self, "Invalid Table Name", "Table name must start with 'oo_'")
+                return
             # Create a new table with the same columns as oo_2022_749 plus id and name
             cursor = self.conn.cursor()
             cursor.execute(f'CREATE TABLE "{table_name}" AS SELECT id, name, * FROM oo_2022_749 WHERE 1=0')
-
+            
             # Insert the id and name values into the new table
             cursor.execute(f'INSERT INTO "{table_name}" (id, name) SELECT id, name FROM oo_2022_749')
             self.conn.commit()
@@ -750,6 +775,8 @@ class DatabaseWindow(QWidget):
             # Add the new table name to the combo box
             self.table_selector.addItem(table_name)
             self.selected_table.addItem(table_name)
+
+
 
 
 
