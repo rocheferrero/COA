@@ -80,7 +80,7 @@ class DatabaseWindow(QWidget):
 
         # Create a Refresh button
         self.refresh_button = QPushButton(self)
-        self.refresh_button.setIcon(qtawesome.icon('fa.refresh'))
+        self.refresh_button.setIcon(qtawesome.icon('fa.repeat'))
         self.refresh_button.setText("Refresh")  # add text to the button                           
         self.refresh_button.clicked.connect(self.refresh_table)
         layout.addWidget(self.refresh_button, 10, 6, alignment=Qt.AlignRight)
