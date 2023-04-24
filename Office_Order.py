@@ -706,11 +706,12 @@ class DatabaseWindow(QWidget):
 
         for i in range(len(data)):
             has_none = False
+            yes_count= False
             
             for j in range(len(data.columns)):
                 item = QTableWidgetItem(str(data.iloc[i, j]))
                 self.table.setItem(i, j, item)
-                if j == 3 and item.text().lower() in ["none", "no",""]:
+                if j == 3 and item.text().lower() in ["none", "no"]:
                     has_none = True
                 elif j == 3 and item.text().lower() == "yes":
                     yes_count += 1
@@ -719,6 +720,11 @@ class DatabaseWindow(QWidget):
                 for k in range(self.table.columnCount()):
                     self.table.item(i, k).setBackground(QColor(255, 200, 200))
                 none_count += 1
+            if yes_count:
+                # Highlight the row with light red color
+                for k in range(self.table.columnCount()):
+                    self.table.item(i, k).setBackground(QColor(176, 226, 255))
+                yes_count += 1
 
 
         # Update the row count label
