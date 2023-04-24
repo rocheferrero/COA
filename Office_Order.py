@@ -776,10 +776,6 @@ class DatabaseWindow(QWidget):
             self.table_selector.addItem(table_name)
             self.selected_table.addItem(table_name)
 
-
-
-
-
 if __name__ == '__main__':
     # Create the application and window
     app = QApplication([])
