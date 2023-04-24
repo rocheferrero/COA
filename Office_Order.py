@@ -1,6 +1,6 @@
 import sqlite3
 from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QIcon, QFont, QTextDocument, QTextCursor, QColor, QTextTableCellFormat, QBrush
+from PyQt5.QtGui import QIcon, QFont, QTextDocument, QTextCursor, QColor, QTextTableCellFormat, QBrush, QPixmap
 from PyQt5.QtPrintSupport import QPrintPreviewDialog
 from PyQt5.QtSql import QSqlDatabase, QSqlQuery
 from PyQt5.QtWidgets import QApplication, QWidget, QPushButton, QGridLayout, QTableWidget, QTableWidgetItem, \
@@ -137,14 +137,12 @@ class DatabaseWindow(QWidget):
         self.table_label.setFixedWidth(150)
         self.table_label.setStyleSheet("border: none;")
 
-
         # Option menu for table selection
         self.selected_table = QComboBox()
         self.group_box_layout.addWidget(self.selected_table, 1, 1)
         self.selected_table.setFixedWidth(300)
         self.selected_table.setVisible(False)
         self.table_label.setVisible(False)
-
 
         # Populate the combo box with table names from the database
         cursor = self.conn.cursor()
@@ -225,7 +223,7 @@ class DatabaseWindow(QWidget):
         self.insert_button.setStyleSheet("""QPushButton:hover {background-color: lightgray;}""")
         self.insert_button.setVisible(False)
 
-                # Set the layout for the group box
+        # Set the layout for the group box
         self.group_box.setLayout(self.group_box_layout)
 
         # Add the group box to the main layout
@@ -233,7 +231,24 @@ class DatabaseWindow(QWidget):
         self.group_box.setFixedWidth(600)
         
         self.group_box.setVisible(False)
-                           
+
+        # Create a label for the image
+        self.image_label = QLabel(self)
+
+        # Load the image file
+        pixmap = QPixmap('logo.png')
+
+        # Scale the image to a specific size
+        scaled_pixmap = pixmap.scaled(250, 250, Qt.KeepAspectRatio)
+
+        # Set the scaled pixmap to the label
+        self.image_label.setPixmap(scaled_pixmap)
+
+        # Add the label to the layout
+        layout.addWidget(self.image_label, 1, 3, 6, 2)
+
+        self.image_label.setVisible(False)
+
         self.search_box1 = QLineEdit()
         self.search_box1.setPlaceholderText("Search in the Table")
         layout.addWidget(self.search_box1, 11, 1, 1, 4)
@@ -311,7 +326,6 @@ class DatabaseWindow(QWidget):
         self.default_username = "admin"
         self.default_password = "admin"
         
-
         # Set the layout for the window
         self.setLayout(layout)
 
@@ -552,6 +566,8 @@ class DatabaseWindow(QWidget):
             self.logout_button.setVisible(True)
             self.group_box.setVisible(True)
             self.refresh_button.setVisible(True)
+            self.image_label.setVisible(True)
+
             self.showMaximized()
 
 
@@ -611,6 +627,8 @@ class DatabaseWindow(QWidget):
             self.logout_button.setVisible(False)
             self.group_box.setVisible(False)
             self.refresh_button.setVisible(False)
+            self.image_label.setVisible(False)
+
 
             # Enable the login form.
             self.title_label.setVisible(True)
