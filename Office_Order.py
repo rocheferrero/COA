@@ -122,10 +122,10 @@ class DatabaseWindow(QWidget):
         self.group_box_layout.setSpacing(10) # reduce spacing between widgets
 
         # Label for table selection
-        self.insert_label = QLabel("INSERT NEW PERSONNEL")
+        self.insert_label = QLabel("<b>INSERT NEW PERSONNEL</b>")
         self.insert_label.setAlignment(Qt.AlignCenter)
         self.group_box_layout.addWidget(self.insert_label, 0, 0, 1, 2, alignment=Qt.AlignHCenter)
-        self.insert_label.setFixedWidth(200)
+        self.insert_label.setFixedWidth(250)
         font = QFont()
         font.setPointSize(10) # set the font size to 16
         self.insert_label.setFont(font)
