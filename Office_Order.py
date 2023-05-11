@@ -3,13 +3,11 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QIcon, QFont, QTextDocument, QTextCursor, QColor, QTextTableCellFormat, QBrush, QPixmap
 from PyQt5.QtPrintSupport import QPrintPreviewDialog
 from PyQt5.QtSql import QSqlDatabase, QSqlQuery
-from PyQt5.QtWidgets import QApplication, QWidget, QPushButton, QGridLayout, QTableWidget, QTableWidgetItem, \
-           QSizePolicy, QLabel, QLineEdit, QMessageBox, QComboBox, QInputDialog, QFrame, QVBoxLayout, QGroupBox, \
-           QHeaderView
+from PyQt5.QtWidgets import QApplication, QWidget, QPushButton, QGridLayout, QTableWidget, QTableWidgetItem, QSizePolicy, QLabel, QLineEdit, \
+                            QMessageBox, QComboBox, QInputDialog, QFrame, QVBoxLayout, QGroupBox, QHeaderView, QDesktopWidget
 import qtawesome
 import csv
 import pandas as pd
-
 
 class DatabaseWindow(QWidget):
     def __init__(self):
@@ -19,6 +17,54 @@ class DatabaseWindow(QWidget):
         # Set up the GUI layout
         layout = QGridLayout()
 
+                # Create a new container widget for the login form
+        self.login_container = QFrame(self)
+        self.login_container.setFrameStyle(QFrame.Panel | QFrame.Raised)
+        self.login_container.setStyleSheet("background-color: white")
+        self.login_container.setFixedWidth(300)
+        self.login_container.setFixedHeight(220)
+        self.login_container_layout = QVBoxLayout(self.login_container)
+        self.login_container_layout.setContentsMargins(20, 20, 20, 20)
+
+        # Add the login form widgets to the container widget
+        
+        self.title_label = QLabel(self.login_container)
+        self.title_label.setText("COA Login")
+        self.title_label.setAlignment(Qt.AlignCenter)  # set alignment to center
+        font = QFont()
+        font.setPointSize(16)  # set font size to 16
+        self.title_label.setFont(font)
+        self.login_container_layout.addWidget(self.title_label)
+
+        self.username_label = QLabel(self.login_container)
+        self.username_label.setText("Username:")
+        self.login_container_layout.addWidget(self.username_label)
+
+        self.username_edit = QLineEdit(self.login_container)
+        self.login_container_layout.addWidget(self.username_edit)
+
+        self.password_label = QLabel(self.login_container)
+        self.password_label.setText("Password:")
+        self.login_container_layout.addWidget(self.password_label)
+
+        self.password_edit = QLineEdit(self.login_container)
+        self.password_edit.setEchoMode(QLineEdit.Password)
+        self.login_container_layout.addWidget(self.password_edit)
+
+        self.login_button = QPushButton(self.login_container)
+        self.login_button.setText("Log In")
+        self.login_button.clicked.connect(self.login)
+        self.login_container_layout.addWidget(self.login_button)
+
+        # Connect the returnPressed signal of the password_edit field to the login method
+        self.password_edit.returnPressed.connect(self.login)
+
+        # Center the login container in the main widget
+        layout.addWidget(self.login_container, 2, 0, 3, 7, alignment=Qt.AlignCenter)
+
+        # Hide the login form initially
+        self.login_container.setVisible(True)
+
         # Create database connection
         db = QSqlDatabase.addDatabase("QSQLITE")
         db.setDatabaseName("./officeorder_1.db")
@@ -27,65 +73,12 @@ class DatabaseWindow(QWidget):
         self.setWindowTitle("COA Office Order")
         self.setWindowIcon(QIcon('logo.png'))
         
-        self.delete_button = QPushButton("Delete Row")
-        self.delete_button.clicked.connect(lambda: self.delete_data(self.current_table))
-        layout.addWidget(self.delete_button, 11, 5)
-        self.delete_button.setVisible(False)
-
-                # Create a button to print the table
-        self.print_button = QPushButton()
-        self.print_button.setIcon(qtawesome.icon('fa.print'))
-        self.print_button.setText("Print Table")  # add text to the button                   
-        self.print_button.clicked.connect(self.print_table)
-        layout.addWidget(self.print_button, 5, 6, alignment=Qt.AlignRight)
-        self.print_button.setFixedWidth(100)
-        self.print_button.setVisible(False)
-
-        # Create the export button with an icon
-        self.export_button = QPushButton(self)
-        self.export_button.setIcon(qtawesome.icon('fa.save'))
-        self.export_button.setText("Export Table")  # add text to the button                   
-        self.export_button.clicked.connect(lambda: self.export_table_to_csv('OfficeOrder.csv'))
-        layout.addWidget(self.export_button, 5, 6, alignment=Qt.AlignLeft)
-        self.export_button.setFixedWidth(100)
-        self.export_button.setVisible(False)
-
-         # Create the logout button with an icon
-        self.logout_button = QPushButton(self)
-        self.logout_button.setIcon(qtawesome.icon('fa.sign-out'))
-        self.logout_button.setText("Log Out")  # add text to the button                   
-        self.logout_button.clicked.connect(self.log_out)
-        layout.addWidget(self.logout_button, 1, 6, alignment=Qt.AlignRight)
-        self.logout_button.setFixedWidth(100)
-        self.logout_button.setVisible(False)
-
-
         # Create a combo box to select the table
         self.table_selector = QComboBox()
         self.table_selector.currentIndexChanged.connect(self.show_table_data)
         layout.addWidget(self.table_selector, 6, 6)
-        self.table_selector.setFixedWidth(200)
+        self.table_selector.setFixedWidth(210 )
         self.table_selector.setVisible(False) 
-
-        icon = QIcon("table.png")
-
-        # Create a button to add a new table
-        self.add_table_button = QPushButton(self)
-        self.add_table_button.setIcon(icon)   
-        self.add_table_button.setText("Add Table")  # add text to the button                           
-        self.add_table_button.clicked.connect(self.add_table)
-        layout.addWidget(self.add_table_button, 6, 5, alignment=Qt.AlignRight)
-        self.add_table_button.setFixedWidth(100)
-        self.add_table_button.setVisible(False)
-
-        # Create a Refresh button
-        self.refresh_button = QPushButton(self)
-        self.refresh_button.setIcon(qtawesome.icon('fa.repeat'))
-        self.refresh_button.setText("Refresh")  # add text to the button                           
-        self.refresh_button.clicked.connect(self.refresh_table)
-        layout.addWidget(self.refresh_button, 10, 6, alignment=Qt.AlignRight)
-        self.refresh_button.setFixedWidth(200)
-        self.refresh_button.setVisible(False)
 
         # Total Rows Counts
         self.row_count_label1 = QLabel(self)
@@ -105,6 +98,7 @@ class DatabaseWindow(QWidget):
         self.table.setStyleSheet("QTableWidget { border: 1px solid black; }")
 
         self.table.setVisible(False)
+        
         layout.addWidget(self.table, 8, 0, 1, 7)
 
         # Set up the database connection
@@ -218,8 +212,8 @@ class DatabaseWindow(QWidget):
         # Add an insert button and connect it to the insert method
         self.insert_button = QPushButton("Insert data")
         self.insert_button.clicked.connect(lambda: self.insert_data())
-        self.group_box_layout.addWidget(self.insert_button, 6, 0, 1, 2,alignment=Qt.AlignHCenter)
-        self.insert_button.setFixedWidth(475)
+        self.group_box_layout.addWidget(self.insert_button, 6, 0, 1, 2,alignment=Qt.AlignLeft)
+        self.insert_button.setFixedWidth(515)
         self.insert_button.setStyleSheet("""QPushButton:hover {background-color: lightgray;}""")
         self.insert_button.setVisible(False)
 
@@ -234,20 +228,67 @@ class DatabaseWindow(QWidget):
 
         # Create a label for the image
         self.image_label = QLabel(self)
-
         # Load the image file
         pixmap = QPixmap('logo.png')
-
         # Scale the image to a specific size
         scaled_pixmap = pixmap.scaled(250, 250, Qt.KeepAspectRatio)
-
         # Set the scaled pixmap to the label
         self.image_label.setPixmap(scaled_pixmap)
-
         # Add the label to the layout
-        layout.addWidget(self.image_label, 1, 3, 6, 2)
+        layout.addWidget(self.image_label, 1, 3, 6, 1)
 
         self.image_label.setVisible(False)
+
+        # Create a button to print the table
+        self.print_button = QPushButton()
+        self.print_button.setIcon(qtawesome.icon('fa.print'))
+        self.print_button.setText("Print Table")  # add text to the button                   
+        self.print_button.clicked.connect(self.print_table)
+        layout.addWidget(self.print_button, 5, 6, alignment=Qt.AlignRight)
+        self.print_button.setFixedWidth(100)
+        self.print_button.setVisible(False)
+
+        # Create the export button with an icon
+        self.export_button = QPushButton(self)
+        self.export_button.setIcon(qtawesome.icon('fa.save'))
+        self.export_button.setText("Export Table")  # add text to the button                   
+        self.export_button.clicked.connect(lambda: self.export_table_to_csv('OfficeOrder.csv'))
+        layout.addWidget(self.export_button, 5, 6, alignment=Qt.AlignLeft)
+        self.export_button.setFixedWidth(100)
+        self.export_button.setVisible(False)
+
+        # Create the logout button with an icon
+        self.logout_button = QPushButton(self)
+        self.logout_button.setIcon(qtawesome.icon('fa.sign-out'))
+        self.logout_button.setText("Log Out")  # add text to the button                   
+        self.logout_button.clicked.connect(self.log_out)
+        layout.addWidget(self.logout_button, 1, 6, alignment=Qt.AlignRight)
+        self.logout_button.setFixedWidth(100)
+        self.logout_button.setVisible(False)
+
+        icon = QIcon("table.png")
+        # Create a button to add a new table
+        self.add_table_button = QPushButton(self)
+        self.add_table_button.setIcon(icon)   
+        self.add_table_button.setText("Add Table")  # add text to the button                           
+        self.add_table_button.clicked.connect(self.add_table)
+        layout.addWidget(self.add_table_button, 6, 5, alignment=Qt.AlignRight)
+        self.add_table_button.setFixedWidth(100)
+        self.add_table_button.setVisible(False)
+
+        # Create a Refresh button
+        self.refresh_button = QPushButton(self)
+        self.refresh_button.setIcon(qtawesome.icon('fa.repeat'))
+        self.refresh_button.setText("Refresh")  # add text to the button                           
+        self.refresh_button.clicked.connect(self.refresh_table)
+        layout.addWidget(self.refresh_button, 10, 6, alignment=Qt.AlignRight)
+        self.refresh_button.setFixedWidth(210)
+        self.refresh_button.setVisible(False)
+
+        self.delete_button = QPushButton("Delete Row")
+        self.delete_button.clicked.connect(lambda: self.delete_data(self.current_table))
+        layout.addWidget(self.delete_button, 11, 5)
+        self.delete_button.setVisible(False)
 
         self.search_box1 = QLineEdit()
         self.search_box1.setPlaceholderText("Search in the Table")
@@ -274,65 +315,17 @@ class DatabaseWindow(QWidget):
         layout.addWidget(self.update_button, 11, 6)
         self.update_button.setVisible(False)
 
-                # Create a new container widget for the login form
-        self.login_container = QFrame(self)
-        self.login_container.setFrameStyle(QFrame.Panel | QFrame.Raised)
-        self.login_container.setStyleSheet("background-color: white")
-        self.login_container.setFixedWidth(300)
-        self.login_container.setFixedHeight(220)
-        self.login_container_layout = QVBoxLayout(self.login_container)
-        self.login_container_layout.setContentsMargins(20, 20, 20, 20)
-
-        # Add the login form widgets to the container widget
-        
-        self.title_label = QLabel(self.login_container)
-        self.title_label.setText("Please Login")
-        self.title_label.setAlignment(Qt.AlignCenter)  # set alignment to center
-        font = QFont()
-        font.setPointSize(16)  # set font size to 16
-        self.title_label.setFont(font)
-        self.login_container_layout.addWidget(self.title_label)
-
-        self.username_label = QLabel(self.login_container)
-        self.username_label.setText("Username:")
-        self.login_container_layout.addWidget(self.username_label)
-
-        self.username_edit = QLineEdit(self.login_container)
-        self.login_container_layout.addWidget(self.username_edit)
-
-        self.password_label = QLabel(self.login_container)
-        self.password_label.setText("Password:")
-        self.login_container_layout.addWidget(self.password_label)
-
-        self.password_edit = QLineEdit(self.login_container)
-        self.password_edit.setEchoMode(QLineEdit.Password)
-        self.login_container_layout.addWidget(self.password_edit)
-
-        self.login_button = QPushButton(self.login_container)
-        self.login_button.setText("Log In")
-        self.login_button.clicked.connect(self.login)
-        self.login_container_layout.addWidget(self.login_button)
-
-        # Connect the returnPressed signal of the password_edit field to the login method
-        self.password_edit.returnPressed.connect(self.login)
-
-        # Center the login container in the main widget
-        layout.addWidget(self.login_container, 2, 0, 3, 7, alignment=Qt.AlignCenter)
-
-        # Hide the login form initially
-        self.login_container.setVisible(True)
-
         # Set the default username and password
         self.default_username = "admin"
         self.default_password = "admin"
-        
+
         # Set the layout for the window
         self.setLayout(layout)
-
+    
     def refresh_table(self):
         # Refresh the table by calling the show_table_data method
         self.show_table_data()
-
+    
     def export_table_to_csv(self, filename):
         # Get the selected table name from the combo box
         table_name = self.table_selector.currentText()
@@ -355,34 +348,7 @@ class DatabaseWindow(QWidget):
 
         # Display a success message
         QMessageBox.information(self, "Export", f"The data has been exported to {filename}.")
-
-    def delete_data(self, table):
-        # Get the selected row(s)
-        selected_rows = self.table.selectionModel().selectedRows()
-            
-        # Make sure at least one row is selected
-        if len(selected_rows) == 0:
-            QMessageBox.warning(self, "Warning", "Please select at least one row to delete.")
-            return
-            
-        # Get the IDs of the selected row(s)
-        ids = [self.table.item(row.row(), 0).text() for row in selected_rows]
-        
-        # Ask user for confirmation before deleting
-        confirm = QMessageBox.question(self, "Delete rows", f"Are you sure you want to delete row?", QMessageBox.Yes | QMessageBox.No)
-        if confirm == QMessageBox.No:
-            return
-        
-        # Delete the selected row(s) from the database
-        c = self.conn.cursor()
-        c.execute(f"DELETE FROM {table} WHERE name IN ({','.join('?' for _ in ids)})", ids)
-        self.conn.commit()
-            
-        # Delete the selected row(s) from the QTableWidget object
-        for row in reversed(sorted(selected_rows, key=lambda x: x.row())):
-            self.table.removeRow(row.row())
-        QMessageBox.information(self, "Delete Success", "Row Deleted")
-
+    
     def print_table(self):
         # Get the data from the visible rows of the table
         data = []
@@ -398,7 +364,7 @@ class DatabaseWindow(QWidget):
                 data.append(row_data) 
 
         # Create a QTextDocument and set its default font
-        document = QTextDocument()
+        document = QTextDocument()          
         font = QFont("Arial", 9)
         document.setDefaultFont(font)
 
@@ -488,16 +454,14 @@ class DatabaseWindow(QWidget):
         preview = QPrintPreviewDialog()
         preview.paintRequested.connect(lambda printer: document.print_(printer))
         preview.exec_()
-
-
-
-    # Define a function to sort the table based on the selected item
+    
     def sort_table(self, index):
         column_names = ["name", "department", "region", "turnover"]
         column_name = column_names[index]
         self.table.sortItems(column_names.index(column_name))
-
+    
     def get_province(self, department):
+
         c = self.conn.cursor()
         c.execute("SELECT province FROM oo_2022_749 WHERE department = ?", (department,))
         result = c.fetchone()
@@ -508,29 +472,7 @@ class DatabaseWindow(QWidget):
             return None
 
         # Function for inserting data
-    def insert_data(self):
-        c = self.conn.cursor()
-        table = self.selected_table.currentText()
-        name = self.name_entry.text().strip()
-        department = self.department_box.currentText()
-        region = self.region_box.currentText()
-        turnover = self.selected_turnover.currentText()
-
-        province = self.get_province(department)
-
-        if turnover != "Select Turnover" and name and department != "Select Department" and region != "Select Region" and table != "Select Table":
-            c.execute(f"INSERT INTO {table} (name, department, region, turnover, province) VALUES (?, ?, ?, ?, ?)", (name, department, region, turnover, province))
-            self.conn.commit()
-            self.name_entry.setText("")
-            self.department_box.setCurrentIndex(0)
-            self.region_box.setCurrentIndex(0)
-            self.selected_turnover.setCurrentIndex(0)
-            QMessageBox.information(self, "Success", "New data inserted successfully")
-        else:
-            # display an error message or handle the missing data in some other way
-            print("Please fill in all required fields.")
-            QMessageBox.warning(self, "Missing fields", "Please fill in all required fields.")
-
+    
     def login(self):
         # Check if the username and password are correct
         if self.username_edit.text() == self.default_username and self.password_edit.text() == self.default_password:
@@ -568,7 +510,7 @@ class DatabaseWindow(QWidget):
             self.refresh_button.setVisible(True)
             self.image_label.setVisible(True)
 
-            self.showMaximized()
+            self.showFullScreen()
 
 
             # Disable the login form
@@ -583,7 +525,7 @@ class DatabaseWindow(QWidget):
         else:
             # Display an error message
             QMessageBox.critical(self, "Error", "Incorrect username or password")
-
+    
     def log_out(self):
         # Display a confirmation message before logging out
         msg_box = QMessageBox()
@@ -640,9 +582,36 @@ class DatabaseWindow(QWidget):
             self.password_edit.setVisible(True)
             self.login_button.setVisible(True)
             self.login_container.setVisible(True)
-            self.showNormal()
+            self.close()
+    
+    def filter_table(self, table, search_text):
 
-
+        num_visible_rows = 0
+        for row in range(table.rowCount()):
+            row_hidden = True
+            for column in range(table.columnCount()):
+                item = table.item(row, column)
+                if item and search_text.lower() in item.text().lower():
+                    row_hidden = False
+                    break
+            table.setRowHidden(row, row_hidden)
+            if not row_hidden:
+                num_visible_rows += 1
+                
+        yes_count = 0
+        none_count = 0
+        for row in range(table.rowCount()):
+            if not table.isRowHidden(row):
+                item = table.item(row, 3)
+                if item and item.text().lower() == "yes":
+                    yes_count += 1
+                elif not item or item.text().lower() in ["none", "no"]:
+                    none_count += 1
+        
+        self.row_count_label1.setText(f"Personnels Total: <b>{num_visible_rows}</b>")
+        self.row_count_label2.setText(f"Turned Over/Yes: <b>{yes_count}</b>")
+        self.row_count_label3.setText(f"None: <b>{none_count}</b>")
+    
     def show_table_data(self):
         # Get the selected table name from the combo box
         table_name = self.table_selector.currentText()
@@ -690,8 +659,6 @@ class DatabaseWindow(QWidget):
                     cell_data = ""
                 self.table.setItem(row_idx, col_idx, QTableWidgetItem(str(cell_data)))
 
-
-
         # Store the current table name
         self.current_table = table_name
 
@@ -707,8 +674,13 @@ class DatabaseWindow(QWidget):
         for i in range(len(data)):
             has_none = False
                         
+        for i in range(len(data)):
+            has_none = False
+                                
             for j in range(len(data.columns)):
                 item = QTableWidgetItem(str(data.iloc[i, j]))
+                if item.text().lower() == "none":
+                    item.setText("")
                 self.table.setItem(i, j, item)
                 if j == 3 and item.text().lower() in ["none", "no"]:
                     has_none = True
@@ -729,43 +701,38 @@ class DatabaseWindow(QWidget):
                 for k in range(self.table.columnCount()):
                     self.table.item(i, k).setBackground(QColor(176, 226, 255))
 
-
-
         # Update the row count label
         row_count = self.table.rowCount()
         self.row_count_label1.setText(f"Personnels Total: <b>{row_count}</b>")
         self.row_count_label2.setText(f"Turned Over/Yes: <b>{yes_count}</b>")
-        self.row_count_label3.setText(f"None: <b>{none_count}</b>")
+        self.row_count_label3.setText(f"None: <b>{none_count}</b>") 
+    
+    def insert_data(self):
+        c = self.conn.cursor()
+        table = self.selected_table.currentText()
+        name = self.name_entry.text().strip()
+        department = self.department_box.currentText()
+        region = self.region_box.currentText()
+        turnover = self.selected_turnover.currentText()
+        province = self.get_province(department)
 
-    def filter_table(self, table, search_text):
+        # Replace "None" with an empty string
+        if turnover == "None":
+            turnover = ""
 
-        num_visible_rows = 0
-        for row in range(table.rowCount()):
-            row_hidden = True
-            for column in range(table.columnCount()):
-                item = table.item(row, column)
-                if item and search_text.lower() in item.text().lower():
-                    row_hidden = False
-                    break
-            table.setRowHidden(row, row_hidden)
-            if not row_hidden:
-                num_visible_rows += 1
-                
-        yes_count = 0
-        none_count = 0
-        for row in range(table.rowCount()):
-            if not table.isRowHidden(row):
-                item = table.item(row, 3)
-                if item and item.text().lower() == "yes":
-                    yes_count += 1
-                elif not item or item.text().lower() in ["none", "no"]:
-                    none_count += 1
-        
-        self.row_count_label1.setText(f"Personnels Total: <b>{num_visible_rows}</b>")
-        self.row_count_label2.setText(f"Turned Over/Yes: <b>{yes_count}</b>")
-        self.row_count_label3.setText(f"None: <b>{none_count}</b>")
-
-
+        if turnover != "Select Turnover" and name and department != "Select Department" and region != "Select Region" and table != "Select Table":
+            c.execute(f"INSERT INTO {table} (name, department, region, turnover, province) VALUES (?, ?, ?, ?, ?)", (name, department, region, turnover, province))
+            self.conn.commit()
+            self.name_entry.setText("")
+            self.department_box.setCurrentIndex(0)
+            self.region_box.setCurrentIndex(0)
+            self.selected_turnover.setCurrentIndex(0)
+            QMessageBox.information(self, "Success", "New data inserted successfully")
+        else:
+            # display an error message or handle the missing data in some other way
+            print("Please fill in all required fields.")
+            QMessageBox.warning(self, "Missing fields", "Please fill in all required fields.")
+    
     def update_data(self, table_name):
         # Update the data in the specified table from the table widget
         cursor = self.conn.cursor()
@@ -783,8 +750,8 @@ class DatabaseWindow(QWidget):
             cursor.execute(f'UPDATE "{table_name}" SET department=?, region=?, turnover=?, province=? WHERE name="{name}"', (department, region, turnover, province))
         self.conn.commit()
         
-        QMessageBox.information(self, "Update Success", "Row Updated")
-
+        QMessageBox.information(self, "Update Success", "Row Updated")  
+    
     def add_table(self):
         # Prompt the user for the new table name
         table_name, ok = QInputDialog.getText(self, 'Add New Table', 'Enter the name of the new table (must start with "oo_"):')
@@ -803,6 +770,33 @@ class DatabaseWindow(QWidget):
             # Add the new table name to the combo box
             self.table_selector.addItem(table_name)
             self.selected_table.addItem(table_name)
+    
+    def delete_data(self, table):
+        # Get the selected row(s)
+        selected_rows = self.table.selectionModel().selectedRows()
+            
+        # Make sure at least one row is selected
+        if len(selected_rows) == 0:
+            QMessageBox.warning(self, "Warning", "Please select at least one row to delete.")
+            return
+            
+        # Get the IDs of the selected row(s)
+        ids = [self.table.item(row.row(), 0).text() for row in selected_rows]
+        
+        # Ask user for confirmation before deleting
+        confirm = QMessageBox.question(self, "Delete rows", f"Are you sure you want to delete row?", QMessageBox.Yes | QMessageBox.No)
+        if confirm == QMessageBox.No:
+            return
+        
+        # Delete the selected row(s) from the database
+        c = self.conn.cursor()
+        c.execute(f"DELETE FROM {table} WHERE name IN ({','.join('?' for _ in ids)})", ids)
+        self.conn.commit()
+            
+        # Delete the selected row(s) from the QTableWidget object
+        for row in reversed(sorted(selected_rows, key=lambda x: x.row())):
+            self.table.removeRow(row.row())
+        QMessageBox.information(self, "Delete Success", "Row Deleted")
 
 if __name__ == '__main__':
     # Create the application and window
